@@ -1,0 +1,15 @@
+name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install modules
+        run: |
+          cd lambdas/express-api
+          yarn
+      - name: Run tests
+        run: |
+          cd lambdas/express-api
+          yarn test:ci
