@@ -7,9 +7,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install modules
         run: |
-          cd lambdas/express-api
           yarn
       - name: Run tests
         run: |
-          cd lambdas/express-api
           yarn test:ci
