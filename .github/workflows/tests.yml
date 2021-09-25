@@ -5,6 +5,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Put mock .secrets.json
+        run: |
+          echo '{"dbUrl": "mock-db-url"}' > .secrets.json
       - name: Install modules
         run: |
           yarn
