@@ -1,9 +1,13 @@
-const secrets = require("./.secrets.json");
 
+const enableLightMode = !!getEnv("LIGHT_MODE", false);
 const dbUrls = {
-  prod: secrets.dbUrl,
   local: "mongodb://localhost:27017/redstone",
 };
+
+if (!enableLightMode) {
+  const secrets = require("./.secrets.json");
+  dbUrls["prod"] = secrets.dbUrl;
+}
 
 function getDbUrl() {
   if (getMode() === "LOCAL") {
@@ -13,12 +17,12 @@ function getDbUrl() {
   }
 }
 
+function getEnv(name, defaultValue) {
+  return process.env[name] || defaultValue;
+}
+
 function getMode() {
-  if (process.env.MODE) {
-    return process.env.MODE;
-  } else {
-    return "LOCAL";
-  }
+  return getEnv("MODE", "LOCAL");
 }
 
 function isProd() {
@@ -26,6 +30,7 @@ function isProd() {
 }
 
 module.exports = {
+  enableLightMode,
   dbUrl: getDbUrl(),
   bigLimitWithMargin: 1200,
   defaultLimit: 1,

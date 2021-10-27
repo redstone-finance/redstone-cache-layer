@@ -6,6 +6,7 @@ const Price = require("../models/price");
 const { assertValidSignature } = require("../helpers/signature-verifier");
 const { priceParamsToPriceObj, getProviderFromParams } = require("../utils");
 const logger = require("../helpers/logger");
+const { tryCleanCollection } = require("../helpers/mongo");
 
 async function addSinglePrice(params) {
   const price = new Price(priceParamsToPriceObj(params));
@@ -265,12 +266,31 @@ module.exports = (router) => {
       // Validating a signature of a randomly selected price
       const priceToVerify = _.sample(reqBody);
       await assertValidSignature(priceToVerify);
+
+      // Cleaning prices for the same provider before posting
+      // new ones in the light mode
+      if (config.enableLightMode) {
+        tryCleanCollection(Price, {
+          provider: reqBody[0].provider,
+        });
+      }
+
       // Adding several prices
       await addSeveralPrices(reqBody);
       pricesSavedCount = reqBody.length;
     } else {
       // Validating the price signature
       await assertValidSignature(reqBody);
+
+      // Cleaning prices for the same provider and symbol before posting
+      // a new one in the light mode
+      if (config.enableLightMode) {
+        tryCleanCollection(Price, {
+          provider: reqBody.provider,
+          symbol: reqBody.symbol,
+        });
+      }
+
       // Adding a single price
       await addSinglePrice(reqBody);
       pricesSavedCount = 1;

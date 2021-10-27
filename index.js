@@ -1,7 +1,6 @@
 const awsServerlessExpress = require("aws-serverless-express");
 const yargs = require("yargs/yargs");
 const { hideBin } = require("yargs/helpers");
-const mongoose = require("mongoose");
 const config = require("./config");
 const app = require("./app");
 const logger = require("./helpers/logger");
@@ -9,12 +8,11 @@ const logger = require("./helpers/logger");
 const argv = yargs(hideBin(process.argv)).argv;
 
 // Connecting to mongoDB
-mongoose.connect(argv.db || config.dbUrl, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useFindAndModify: false,
-  useCreateIndex: true,
-}).then("Connected to mongoDB");
+if (config.enableLightMode) {
+  connectToMongoMemoryServer();
+} else {
+  connectToRemoteMongo(argv.db || config.dbUrl);
+}
 
 // Exporting method for docker container for AWS lambda
 const server = awsServerlessExpress.createServer(app);

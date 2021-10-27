@@ -3,6 +3,8 @@ const _ = require("lodash");
 const Package = require("../models/package");
 const Price = require("../models/price");
 const { getProviderFromParams } = require("../utils");
+const { tryCleanCollection } = require("../helpers/mongo");
+const config = require("../config");
 
 function dbItemToObj(item) {
   return _.omit(item.toObject(), ["_id", "__v"]);
@@ -13,6 +15,13 @@ module.exports = (router) => {
    * This endpoint is used for publishing a new price package
   */
   router.post("/packages", asyncHandler(async (req, res) => {
+    // Cleaning packages of the same provider before in the light mode
+    if (config.enableLightMode) {
+      await tryCleanCollection(Price, {
+        signer: req.body.signer
+      });
+    }
+
     const newPackage = new Package(req.body);
     await newPackage.save();
     return res.json({

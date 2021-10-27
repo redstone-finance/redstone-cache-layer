@@ -1,6 +1,7 @@
 # This Dockerfile contains a docker container configuration
-# for redstone cache layer express app connected to the Mongo DB
-# Mongo DB connection url must be specified in .secrets.json file
+# for redstone cache layer express app with the light mode
+# So the app doesn't store historical data and uses
+# memory as a storage instead of Mongo DB
 
 FROM public.ecr.aws/lambda/nodejs:14
 
@@ -14,5 +15,7 @@ RUN yarn
 COPY . .
 
 ENV MODE=PROD
+
+ENV LIGHT_MODE = true
 
 CMD [ "index.handler" ]
