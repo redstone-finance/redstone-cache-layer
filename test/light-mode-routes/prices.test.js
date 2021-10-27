@@ -28,8 +28,7 @@ describe("Testing prices route", () => {
         .expect(200);
       expect(postResponse.body).toHaveProperty("msg", "Prices saved. count: 1");
       const pricesCountInDB = await Price.countDocuments().exec();
-      // expect(pricesCountInDB).toBe(1);
-      console.log({pricesCountInDB});
+      expect(pricesCountInDB).toBe(1);
     }
     
 
@@ -87,7 +86,7 @@ describe("Testing prices route", () => {
         "msg",
         `Prices saved. count: ${pricesCount}`);
       const pricesCountInDB = await Price.countDocuments({}).exec();
-      console.log({pricesCountInDB2: pricesCountInDB}); // TODO: remove
+      expect(pricesCountInDB).toBe(pricesCount);
     }
     
 

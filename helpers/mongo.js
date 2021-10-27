@@ -13,7 +13,7 @@ async function tryCleanCollection(model, query) {
     logger.info(
       `Cleaning collection: ${model.collection.collectionName}. `
       + `Query: ${JSON.stringify(query)}. Items to be removed: ${collectionSize}`);
-    // await model.deleteMany(query);
+    await model.deleteMany(query);
   }
 }
 

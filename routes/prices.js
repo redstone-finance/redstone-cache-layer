@@ -270,7 +270,7 @@ module.exports = (router) => {
       // Cleaning prices for the same provider before posting
       // new ones in the light mode
       if (config.enableLightMode) {
-        tryCleanCollection(Price, {
+        await tryCleanCollection(Price, {
           provider: reqBody[0].provider,
         });
       }
@@ -285,7 +285,7 @@ module.exports = (router) => {
       // Cleaning prices for the same provider and symbol before posting
       // a new one in the light mode
       if (config.enableLightMode) {
-        tryCleanCollection(Price, {
+        await tryCleanCollection(Price, {
           provider: reqBody.provider,
           symbol: reqBody.symbol,
         });
