@@ -15,10 +15,11 @@ module.exports = (router) => {
    * This endpoint is used for publishing a new price package
   */
   router.post("/packages", asyncHandler(async (req, res) => {
-    // Cleaning packages of the same provider before in the light mode
+    // Cleaning older packages of the same provider before in the light mode
     if (config.enableLightMode) {
-      await tryCleanCollection(Price, {
-        signer: req.body.signer
+      await tryCleanCollection(Package, {
+        signer: req.body.signer,
+        timestamp: { $lt: Number(req.body.timestamp) },
       });
     }
 

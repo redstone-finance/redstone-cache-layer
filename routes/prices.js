@@ -267,16 +267,18 @@ module.exports = (router) => {
       const priceToVerify = _.sample(reqBody);
       await assertValidSignature(priceToVerify);
 
-      // Cleaning prices for the same provider before posting
+      // Cleaning older prices for the same provider before posting
       // new ones in the light mode
       if (config.enableLightMode) {
         await tryCleanCollection(Price, {
           provider: reqBody[0].provider,
+          timestamp: { $lt: Number(reqBody[0].timestamp) },
         });
       }
 
       // Adding several prices
       await addSeveralPrices(reqBody);
+      
       pricesSavedCount = reqBody.length;
     } else {
       // Validating the price signature
@@ -288,6 +290,7 @@ module.exports = (router) => {
         await tryCleanCollection(Price, {
           provider: reqBody.provider,
           symbol: reqBody.symbol,
+          timestamp: { $lt: Number(reqBody.timestamp) },
         });
       }
 

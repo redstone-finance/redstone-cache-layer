@@ -1,5 +1,5 @@
 module.exports = {
   verbose: true,
-  testTimeout: 10000,
+  testTimeout: 20000,
   testEnvironment: "node",
 };

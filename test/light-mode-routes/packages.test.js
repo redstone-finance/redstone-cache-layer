@@ -10,8 +10,6 @@ jest.mock("../../config", () => require("../helpers/light-mode-config"));
 
 const provider = getProviderForTests();
 
-// TOOD: update the tests
-
 describe("Testing packages route", () => {
   beforeEach(async () => await testDB.connect());
   afterEach(async () => await testDB.closeDatabase());
@@ -43,10 +41,17 @@ describe("Testing packages route", () => {
   };
 
   test("Should post a package and fetch it", async () => {
-    await request(app)
-      .post("/packages")
-      .send(testPackage)
-      .expect(200);
+    const postCount = 10;
+
+    for (let i = 0; i < postCount; i++) {
+      await request(app)
+        .post("/packages")
+        .send({...testPackage, timestamp: testPackage.timestamp + i})
+        .expect(200);
+      const packagesCountInDB = await Package.countDocuments().exec();
+      expect(packagesCountInDB).toBe(1);
+    }
+    
 
     const response = await request(app)
       .get(`/packages/latest?provider=${provider.name}`)
@@ -54,6 +59,7 @@ describe("Testing packages route", () => {
 
     expect(response.body).toEqual({
       ...testPackage,
+      timestamp: testPackage.timestamp + (postCount - 1),
       prices: [],
     });
   });

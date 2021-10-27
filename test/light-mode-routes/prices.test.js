@@ -20,11 +20,12 @@ describe("Testing prices route", () => {
   test("Should post and get a single price", async () => {
     // Posting a price
     const price = getMockPriceData();
+    const postCount = 10;
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < postCount; i++) {
       const postResponse = await request(app)
         .post("/prices")
-        .send(price)
+        .send({ ...price, timestamp: price.timestamp + i })
         .expect(200);
       expect(postResponse.body).toHaveProperty("msg", "Prices saved. count: 1");
       const pricesCountInDB = await Price.countDocuments().exec();
@@ -51,11 +52,11 @@ describe("Testing prices route", () => {
       "signature",
       "permawebTx",
       "version",
-      "timestamp",
     ];
     for (const prop of propsToCheck) {
       expect(fetchedPrice).toHaveProperty(prop, price[prop]);
     }
+    expect(fetchedPrice).toHaveProperty("timestamp", price.timestamp + (postCount - 1));
     expect(fetchedPrice).toHaveProperty(
       "source.test",
       price.source.test);
@@ -75,12 +76,15 @@ describe("Testing prices route", () => {
       });
       prices.push(price);
     }
+
+    const postCount = 5;
     
     // Posting several prices for several tokens
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < postCount; i++) {
+      const pricesToPost = prices.map(p => ({...p, timestamp: p.timestamp + i}));
       const postResponse = await request(app)
         .post("/prices")
-        .send(prices)
+        .send(pricesToPost)
         .expect(200);
       expect(postResponse.body).toHaveProperty(
         "msg",
@@ -110,7 +114,7 @@ describe("Testing prices route", () => {
       .query({
         provider: provider.name,
         symbols: prices.map(p => p.symbol).join(","),
-        toTimestamp: prices[0].timestamp,
+        toTimestamp: prices[0].timestamp + (postCount - 1),
       })
       .expect(200);
     expect(_.keys(historicalPricesResponse.body).length).toBe(pricesCount);

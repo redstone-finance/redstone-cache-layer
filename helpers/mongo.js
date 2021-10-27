@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const logger = require("./logger");
 
-const MAX_COLLECTION_SIZE_TO_CLEAN = 10;
+const MAX_COLLECTION_SIZE_TO_CLEAN = 2000;
 
 async function tryCleanCollection(model, query) {
   const collectionSize = await model.countDocuments(query).exec();

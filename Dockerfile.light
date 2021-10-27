@@ -14,6 +14,11 @@ RUN yarn
 
 COPY . .
 
+# secrets.json is not required in light mode
+# because a cache-layer in light mode doesn't
+# connect to the remote mongo DB
+RUN rm ".secrets.json"
+
 ENV MODE=PROD
 
 ENV LIGHT_MODE = true
