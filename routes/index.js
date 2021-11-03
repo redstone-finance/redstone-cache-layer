@@ -14,7 +14,7 @@ module.exports.getRouter = (express) => {
   configs(router);
   providers(router);
 
-  if (!config.enableLightMode) {
+  if (!config.enableLiteMode) {
     metrics(router);
     errors(router);
   }

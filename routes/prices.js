@@ -268,8 +268,8 @@ module.exports = (router) => {
       await assertValidSignature(priceToVerify);
 
       // Cleaning older prices for the same provider before posting
-      // new ones in the light mode
-      if (config.enableLightMode) {
+      // new ones in the lite mode
+      if (config.enableLiteMode) {
         await tryCleanCollection(Price, {
           provider: reqBody[0].provider,
           timestamp: { $lt: Number(reqBody[0].timestamp) },
@@ -285,8 +285,8 @@ module.exports = (router) => {
       await assertValidSignature(reqBody);
 
       // Cleaning prices for the same provider and symbol before posting
-      // a new one in the light mode
-      if (config.enableLightMode) {
+      // a new one in the lite mode
+      if (config.enableLiteMode) {
         await tryCleanCollection(Price, {
           provider: reqBody.provider,
           symbol: reqBody.symbol,

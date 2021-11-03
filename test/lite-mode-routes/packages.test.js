@@ -6,7 +6,7 @@ const Price = require("../../models/price");
 const Package = require("../../models/package");
 const { getProviders } = require("../../providers");
 
-jest.mock("../../config", () => require("../helpers/light-mode-config"));
+jest.mock("../../config", () => require("../helpers/lite-mode-config"));
 
 const provider = getProviderForTests();
 

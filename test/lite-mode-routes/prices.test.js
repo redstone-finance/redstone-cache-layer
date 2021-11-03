@@ -7,7 +7,7 @@ const testDB = require("../test-db");
 const { getProviders } = require("../../providers");
 const Price = require("../../models/price");
 
-jest.mock("../../config", () => require("../helpers/light-mode-config"));
+jest.mock("../../config", () => require("../helpers/lite-mode-config"));
 
 const provider = getProviderForTests();
 

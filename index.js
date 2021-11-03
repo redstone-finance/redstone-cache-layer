@@ -4,11 +4,15 @@ const { hideBin } = require("yargs/helpers");
 const config = require("./config");
 const app = require("./app");
 const logger = require("./helpers/logger");
+const {
+  connectToMongoMemoryServer,
+  connectToRemoteMongo,
+} = require("./helpers/mongo");
 
 const argv = yargs(hideBin(process.argv)).argv;
 
 // Connecting to mongoDB
-if (config.enableLightMode) {
+if (config.enableLiteMode) {
   connectToMongoMemoryServer();
 } else {
   connectToRemoteMongo(argv.db || config.dbUrl);

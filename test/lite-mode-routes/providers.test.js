@@ -2,7 +2,7 @@ const request = require("supertest");
 const app = require("../../app");
 const testDB = require("../test-db");
 
-jest.mock("../../config", () => require("../helpers/light-mode-config"));
+jest.mock("../../config", () => require("../helpers/lite-mode-config"));
 
 const providers = [
   "redstone",

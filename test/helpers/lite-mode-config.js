@@ -4,5 +4,5 @@ module.exports = {
   defaultLocalPort: 9000,
   enableJsonLogs: false,
   maxLimitForPrices: 3000,
-  enableLightMode: true,
+  enableLiteMode: true,
 };

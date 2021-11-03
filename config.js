@@ -1,10 +1,10 @@
 
-const enableLightMode = !!getEnv("LIGHT_MODE", false);
+const enableLiteMode = !!getEnv("LIGHT_MODE", false);
 const dbUrls = {
   local: "mongodb://localhost:27017/redstone",
 };
 
-if (!enableLightMode) {
+if (!enableLiteMode) {
   const secrets = require("./.secrets.json");
   dbUrls["prod"] = secrets.dbUrl;
 }
@@ -30,7 +30,7 @@ function isProd() {
 }
 
 module.exports = {
-  enableLightMode,
+  enableLiteMode,
   dbUrl: getDbUrl(),
   bigLimitWithMargin: 1200,
   defaultLimit: 1,

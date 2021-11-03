@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "start": "node -e 'require(\"./index\").runLocalServer()'",
     "dev": "MODE=LOCAL node -e 'require(\"./index\").runLocalServer()'",
     "test": "jest --coverage",
     "test:ci": "NODE_ENV=test jest --ci --reporters='default' --reporters='./helpers/GithubActionsReporter'"
@@ -22,7 +23,7 @@
     "lodash": "^4.17.21",
     "mongodb-memory-server": "^7.5.1",
     "mongoose": "^5.12.3",
-    "redstone-node": "^0.4.17",
+    "redstone-node": "^0.4.20",
     "yargs": "^17.0.1"
   },
   "devDependencies": {
