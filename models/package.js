@@ -22,6 +22,10 @@ const PackageSchema = new Schema({
     type: String,
     required: true,
   },
+  prices: {
+    type: Array,
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("Package", PackageSchema);

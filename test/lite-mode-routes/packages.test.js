@@ -68,7 +68,6 @@ describe("Testing packages route", () => {
     // Given
     await new Price({
       ...testPrice,
-
     }).save();
     await new Package(testPackage).save();
 
@@ -83,6 +82,7 @@ describe("Testing packages route", () => {
     // Then
     expect(response.body).toEqual({
       ...testPackage,
+      signer: "0x926E370fD53c23f8B71ad2B3217b227E41A92b12",
       signature: evmSignature,
       liteSignature: liteEvmSignature,
       prices: [_.pick(testPrice, ["value", "symbol"])],

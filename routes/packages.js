@@ -5,6 +5,7 @@ const Price = require("../models/price");
 const { getProviderFromParams } = require("../utils");
 const { tryCleanCollection } = require("../helpers/mongo");
 const config = require("../config");
+const { getEvmAddressForProviderAddress } = require("../providers");
 
 function dbItemToObj(item) {
   return _.omit(item.toObject(), ["_id", "__v"]);
@@ -23,8 +24,11 @@ module.exports = (router) => {
       });
     }
 
+    // Saving package in DB
     const newPackage = new Package(req.body);
     await newPackage.save();
+
+    // Returning package id in response
     return res.json({
       msg: "Package saved",
       id: newPackage._id,
@@ -42,43 +46,42 @@ module.exports = (router) => {
       throw new Error("Provider address is required");
     }
 
-    // Fetching package from DB
-    const packages = await Package
-      .find({ provider: provider.address })
-      .sort({ timestamp: -1 })
-      .limit(1);
+    let responseObj;
+    const symbol = req.query.symbol;
 
-    const packageObjects = packages.map(dbItemToObj);
+    if (symbol) {
+      // Fetching latest price for symbol from DB
+      const price = await Price.findOne({
+          provider: provider.address,
+          symbol,
+        })
+        .sort({ timestamp: -1 });
 
-    if (packageObjects.length === 0) {
-      return res.status(404).send("Package not found");
-    } else {
-      const packageObj = packageObjects[0];
-
-      // Building mongo query
-      const priceQuery = {
-        provider: provider.address,
-        timestamp: packageObj.timestamp,
+      if (!price) {
+        throw new Error(`Value not found for symbol: ${symbol}`);
+      }
+      
+      responseObj = {
+        ..._.pick(price, ["timestamp", "provider"]),
+        signature: price.evmSignature.toString("base64"),
+        liteSignature: price.liteEvmSignature.toString("base64"),
+        prices: [{ symbol: req.query.symbol, value: price.value }],
+        signer: provider.evmAddress, // TODO: we don't really need signer, as it must be fetched from a trusted source or hardcoded in the redstone-evm-connector
       };
-      if (req.query.symbol) {
-        priceQuery.symbol = req.query.symbol;
+    } else {
+      // Fetching latest package from DB
+      const packageFromDB = await Package.findOne({
+          provider: provider.address,
+        })
+        .sort({ timestamp: -1 });
+
+      if (!packageFromDB) {
+        throw new Error(`Latest package not found`);
       }
 
-      // Fetching prices from DB
-      const prices = await Price.find(priceQuery);
-      packageObj.prices = prices.map(p => _.pick(p, ["symbol", "value"]));
-
-      // Replacing evm signatures for single price if needed
-      if (req.query.symbol) {
-        if (prices.length !== 1) {
-          throw new Error(
-            `Must have exactly one price for symbol: "${req.query.symbol}"`);
-        }
-        packageObj.signature = prices[0].evmSignature.toString("base64");
-        packageObj.liteSignature = prices[0].liteEvmSignature.toString("base64");
-      }
-
-      return res.json(packageObj);
+      responseObj = dbItemToObj(packageFromDB);
     }
+
+    return res.json(responseObj);
   }));
 };
