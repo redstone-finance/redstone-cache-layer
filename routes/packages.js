@@ -16,6 +16,10 @@ module.exports = (router) => {
    * This endpoint is used for publishing a new price package
   */
   router.post("/packages", asyncHandler(async (req, res) => {
+    // Saving package in DB
+    const newPackage = new Package(req.body);
+    await newPackage.save();
+
     // Cleaning older packages of the same provider before in the lite mode
     if (config.enableLiteMode) {
       await tryCleanCollection(Package, {
@@ -23,10 +27,6 @@ module.exports = (router) => {
         timestamp: { $lt: Number(req.body.timestamp) },
       });
     }
-
-    // Saving package in DB
-    const newPackage = new Package(req.body);
-    await newPackage.save();
 
     // Returning package id in response
     return res.json({
