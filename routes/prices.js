@@ -284,6 +284,10 @@ module.exports = (router) => {
       // Validating the price signature
       await assertValidSignature(reqBody);
 
+      // Adding a single price
+      await addSinglePrice(reqBody);
+      pricesSavedCount = 1;
+
       // Cleaning prices for the same provider and symbol before posting
       // a new one in the lite mode
       if (config.enableLiteMode) {
@@ -293,10 +297,6 @@ module.exports = (router) => {
           timestamp: { $lt: Number(reqBody.timestamp) },
         });
       }
-
-      // Adding a single price
-      await addSinglePrice(reqBody);
-      pricesSavedCount = 1;
     }
 
     return res.json({ msg: `Prices saved. count: ${pricesSavedCount}` });
