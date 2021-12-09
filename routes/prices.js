@@ -267,7 +267,10 @@ module.exports = (router) => {
       const priceToVerify = _.sample(reqBody);
       await assertValidSignature(priceToVerify);
 
-      // Cleaning older prices for the same provider before posting
+      // Adding several prices
+      await addSeveralPrices(reqBody);
+
+      // Cleaning older prices for the same provider after posting
       // new ones in the lite mode
       if (config.enableLiteMode) {
         await tryCleanCollection(Price, {
@@ -275,9 +278,6 @@ module.exports = (router) => {
           timestamp: { $lt: Number(reqBody[0].timestamp) },
         });
       }
-
-      // Adding several prices
-      await addSeveralPrices(reqBody);
       
       pricesSavedCount = reqBody.length;
     } else {
