@@ -3,7 +3,7 @@ const logger = require("./logger");
 const config = require("../config");
 
 // Amplitude is a web analytics system. Learn more at https://amplitude.com
-// We use it to simply measure get and post reuests to the RedStone Http Api
+// We use it to simply measure get and post requests to the RedStone Http Api
 // and build nice analytics charts
 
 // Check the analytics dashboard using the link below
