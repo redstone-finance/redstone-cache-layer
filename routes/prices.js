@@ -3,6 +3,7 @@ const _ = require("lodash");
 
 const config = require("../config");
 const Price = require("../models/price");
+const { logEvent } = require("../helpers/amplitude-event-logger");
 const { assertValidSignature } = require("../helpers/signature-verifier");
 const { priceParamsToPriceObj, getProviderFromParams } = require("../utils");
 const logger = require("../helpers/logger");
@@ -219,6 +220,13 @@ module.exports = (router) => {
     // Request validation
     const params = req.query;
 
+    // Saving API read event in amplitude
+    logEvent({
+      eventName: "api-get-request",
+      eventProps: params,
+      ip: getIp(req),
+    });
+
     // Getting provider details
     const providerDetails = await getProviderFromParams(params);
     params.provider = providerDetails.address;
@@ -255,6 +263,15 @@ module.exports = (router) => {
   router.post("/prices", asyncHandler(async (req, res) => {
     const reqBody = req.body;
     let pricesSavedCount = 0;
+
+    // Saving API post event in amplitude
+    logEvent({
+      eventName: "api-post-request",
+      eventProps: {
+        pricesCount: getPricesCount(reqBody),
+      },
+      ip: getIp(req),
+    });
 
     if (Array.isArray(reqBody)) {
       const invalidPrices = reqBody.filter(p => !p.value);

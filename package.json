@@ -10,6 +10,7 @@
     "test:ci": "NODE_ENV=test jest --ci --reporters='default' --reporters='./helpers/GithubActionsReporter'"
   },
   "dependencies": {
+    "@amplitude/node": "^1.9.1",
     "@vendia/serverless-express": "^4.3.9",
     "arweave": "^1.10.14",
     "aws-sdk": "^2.931.0",

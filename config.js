@@ -38,5 +38,6 @@ module.exports = {
   awsSesRegion: "eu-north-1",
   enableJsonLogs: isProd(),
   maxLimitForPrices: 3000,
+  enableAmplitudeLogging: getEnv("ENABLE_AMPLITUDE_LOGGING", false),
   isProd,
 };

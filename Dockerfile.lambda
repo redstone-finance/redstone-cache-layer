@@ -14,5 +14,6 @@ RUN yarn
 COPY . .
 
 ENV MODE=PROD
+ENV ENABLE_AMPLITUDE_LOGGING=true
 
 CMD [ "index.handler" ]
