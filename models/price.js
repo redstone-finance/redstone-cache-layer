@@ -22,7 +22,7 @@ const PriceSchema = new Schema({
   },
   signature: {
     type: Buffer,
-    required: true,
+    required: false, // It's not required for new data points, because we got rid fo Arweave signatures
   },
   evmSignature: {
     type: Buffer,
