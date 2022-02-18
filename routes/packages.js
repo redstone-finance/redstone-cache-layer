@@ -5,7 +5,6 @@ const Price = require("../models/price");
 const { getProviderFromParams } = require("../utils");
 const { tryCleanCollection } = require("../helpers/mongo");
 const config = require("../config");
-const { getEvmAddressForProviderAddress } = require("../providers");
 
 function dbItemToObj(item) {
   return _.omit(item.toObject(), ["_id", "__v"]);

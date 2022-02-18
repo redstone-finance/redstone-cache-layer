@@ -281,8 +281,9 @@ module.exports = (router) => {
       }
 
       // Validating a signature of a randomly selected price
-      const priceToVerify = _.sample(reqBody);
-      await assertValidSignature(priceToVerify);
+      // We got rid of arweave signatures
+      // const priceToVerify = _.sample(reqBody);
+      // await assertValidSignature(priceToVerify);
 
       // Adding several prices
       await addSeveralPrices(reqBody);
