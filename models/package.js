@@ -8,7 +8,7 @@ const PackageSchema = new Schema({
   },
   signature: {
     type: String,
-    required: true,
+    required: false, // It's not required for new data points, because we got rid fo Arweave signatures
   },
   liteSignature: {
     type: String,
