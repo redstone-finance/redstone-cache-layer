@@ -20,7 +20,7 @@ const PackageSchema = new Schema({
   },
   signer: {
     type: String,
-    required: true,
+    required: false,
   },
   prices: {
     type: Array,
