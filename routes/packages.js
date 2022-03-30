@@ -62,7 +62,7 @@ module.exports = (router) => {
       
       responseObj = {
         ..._.pick(price, ["timestamp", "provider"]),
-        signature: price.evmSignature.toString("base64"),
+        signature: price.evmSignature?.toString("base64"),
         liteSignature: price.liteEvmSignature.toString("base64"),
         prices: [{ symbol: req.query.symbol, value: price.value }],
         signer: provider.evmAddress, // TODO: we don't really need signer, as it must be fetched from a trusted source or hardcoded in the redstone-evm-connector
