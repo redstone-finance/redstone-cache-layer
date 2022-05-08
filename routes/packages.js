@@ -23,7 +23,7 @@ module.exports = (router) => {
     if (config.enableLiteMode) {
       await tryCleanCollection(Package, {
         signer: req.body.signer,
-        timestamp: { $lt: Number(req.body.timestamp) },
+        timestamp: { $lt: newPackage.timestamp - config.cacheTTLMilliseconds },
       });
     }
 
@@ -83,4 +83,6 @@ module.exports = (router) => {
 
     return res.json(responseObj);
   }));
+
+
 };

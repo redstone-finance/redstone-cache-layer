@@ -293,7 +293,7 @@ module.exports = (router) => {
       if (config.enableLiteMode) {
         await tryCleanCollection(Price, {
           provider: reqBody[0].provider,
-          timestamp: { $lt: Number(reqBody[0].timestamp) },
+          timestamp: { $lt: Number(reqBody[0].timestamp) - config.cacheTTLMilliseconds },
         });
       }
       
@@ -312,7 +312,7 @@ module.exports = (router) => {
         await tryCleanCollection(Price, {
           provider: reqBody.provider,
           symbol: reqBody.symbol,
-          timestamp: { $lt: Number(reqBody.timestamp) },
+          timestamp: { $lt: Number(reqBody.timestamp) - config.cacheTTLMilliseconds },
         });
       }
     }

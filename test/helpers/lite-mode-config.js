@@ -5,4 +5,5 @@ module.exports = {
   enableJsonLogs: false,
   maxLimitForPrices: 3000,
   enableLiteMode: true,
+  cacheTTLMilliseconds: 0, // for tests
 };

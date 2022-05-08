@@ -1,4 +1,4 @@
-
+const cacheTTLMilliseconds = 7 * 24 * 3600 * 1000; // 7 days
 const enableLiteMode = !!getEnv("LIGHT_MODE", false);
 const dbUrls = {
   local: "mongodb://localhost:27017/redstone",
@@ -40,4 +40,5 @@ module.exports = {
   maxLimitForPrices: 3000,
   enableAmplitudeLogging: getEnv("ENABLE_AMPLITUDE_LOGGING", false),
   isProd,
+  cacheTTLMilliseconds,
 };
