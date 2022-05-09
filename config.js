@@ -1,4 +1,4 @@
-const cacheTTLMilliseconds = 7 * 24 * 3600 * 1000; // 7 days
+const cacheTTLMilliseconds = 3 * 3600 * 1000; // 3 hours
 const enableLiteMode = !!getEnv("LIGHT_MODE", false);
 const dbUrls = {
   local: "mongodb://localhost:27017/redstone",
