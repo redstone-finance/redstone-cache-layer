@@ -84,5 +84,48 @@ module.exports = (router) => {
     return res.json(responseObj);
   }));
 
+  /**
+   * This endpoint is used for fetching the multiple
+   * packages for the specified symbol
+  */
+  router.get("/packages/multiple", asyncHandler(async (req, res) => {
+    let responseObj;
+    const symbol = req.query.symbol;
 
+    if (symbol) {
+      // Fetching latest price for symbol from DB
+      const prices = await Price.find({
+          provider: provider.address,
+          symbol,
+        })
+        .sort({ timestamp: -1 });
+
+      if (prices.length === 0) {
+        throw new Error(`Value not found for symbol: ${symbol}`);
+      }
+      
+      responseObj = {
+        ..._.pick(price, ["timestamp"]),
+        signature: price.evmSignature?.toString("base64"),
+        liteSignature: price.liteEvmSignature.toString("base64"),
+        prices: prices.map(price => [{ symbol: req.query.symbol, value: price.value }]),
+        signer: provider.evmAddress, // TODO: we don't really need signer, as it must be fetched from a trusted source or hardcoded in the redstone-evm-connector
+      };
+    } else {
+      // Fetching latest package from DB
+      const packageFromDB = await Package.find({
+          provider: provider.address,
+          symbol,
+        })
+        .sort({ timestamp: -1 });
+
+      if (!packageFromDB) {
+        throw new Error(`Latest package not found`);
+      }
+
+      responseObj = dbItemToObj(packageFromDB);
+    }
+
+    return res.json(responseObj);
+  }));
 };
