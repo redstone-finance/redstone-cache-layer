@@ -3,7 +3,7 @@
 # The app in the lite mode doesn't store historical data and uses
 # memory as a storage instead of Mongo DB
 
-FROM node:14
+FROM node:16
 
 WORKDIR /var/task/
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import providersJson from "redstone-node/dist/src/config/providers.json";
+import providersJson from "redstone-node/dist/src/config/nodes.json";
 
 export const providers = (router: Router) => {
 

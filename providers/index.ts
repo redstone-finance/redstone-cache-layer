@@ -1,4 +1,4 @@
-import providers from "redstone-node/dist/src/config/providers.json";
+import providers from "redstone-node/dist/src/config/nodes.json";
 
 export const getProviders = () => {
   return providers;
