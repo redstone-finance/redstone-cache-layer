@@ -1,26 +1,25 @@
 const getEnv = (name: string, defaultValue: any) => {
   return process.env[name] || defaultValue;
-}
+};
 
 const getMode = () => {
   return getEnv("MODE", "LOCAL");
-}
+};
 
 const isProd = () => {
   return getMode() === "PROD";
-}
+};
 
 const isTest = process.env.NODE_ENV === "test";
 
 const enableLiteMode = getEnv("LIGHT_MODE", false) === "true";
 const dbUrls = {
   local: "mongodb://localhost:27017/redstone",
-  prod: ""
+  prod: "",
 };
 
 if (!enableLiteMode && !isTest) {
-  const secrets = require("./.secrets.json");
-  dbUrls["prod"] = secrets.dbUrl;
+  dbUrls["prod"] = process.env.MONGO_DB_URL;
 }
 
 function getDbUrl() {
@@ -51,5 +50,5 @@ export {
   isProduction,
   maxLimitForPrices,
   enableAmplitudeLogging,
-  cacheTTLMilliseconds
+  cacheTTLMilliseconds,
 };
