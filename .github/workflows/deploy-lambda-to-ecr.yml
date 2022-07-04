@@ -36,7 +36,7 @@ jobs:
       - name: Build, tag, and push image to Amazon ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ steps.repoName.outputs.reponame }}
+          ECR_REPOSITORY: ${{ steps.repo-name.outputs.reponame }}-lambda
           IMAGE_TAG: ${{ steps.sha.outputs.sha7 }}
         run: |
           docker build -f Dockerfile.lambda -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
