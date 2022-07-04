@@ -1,6 +1,10 @@
-import mongoose from "mongoose";
-import { Price, PriceSchema } from "./price";
+import mongoose, { mongo } from "mongoose";
 const Schema = mongoose.Schema;
+
+export interface IDataPoint {
+  symbol: string;
+  value: any;
+}
 
 export interface Package {
   timestamp: number;
@@ -8,8 +12,19 @@ export interface Package {
   liteSignature?: string;
   provider: string;
   signer: string;
-  prices: Price[];
+  prices: IDataPoint[];
 }
+
+const DataPointSchema = new Schema<IDataPoint>({
+  symbol: {
+    type: String,
+    required: true,
+  },
+  value: {
+    type: Schema.Types.Mixed,
+    required: true,
+  },
+});
 
 const PackageSchema = new Schema<Package>({
   timestamp: {
@@ -33,7 +48,7 @@ const PackageSchema = new Schema<Package>({
     required: false,
   },
   prices: {
-    type: [PriceSchema],
+    type: [DataPointSchema],
     required: true,
   },
 });
