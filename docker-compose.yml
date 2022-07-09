@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    ports:
+      - 9000:9000
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_DB_URL=mongodb://mongodb:27017/redstone-cache-layer
+      - LIGHT_MODE=false
+      - MODE=PROD
+
+  mongodb:
+    image: mongo:5.0
+    ports:
+      - 27017:27017
+    volumes:
+      - db-volume:/data/db
+
+  mongo-express:
+    image: mongo-express:1.0.0-alpha.4
+    ports:
+      - "9001:8081"
+    depends_on:
+      - mongodb
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
+
+volumes:
+  db-volume:
