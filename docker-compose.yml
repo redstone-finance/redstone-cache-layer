@@ -22,7 +22,7 @@ services:
   mongo-express:
     image: mongo-express:1.0.0-alpha.4
     ports:
-      - "9001:8081"
+      - "8081:8081"
     depends_on:
       - mongodb
     environment:
