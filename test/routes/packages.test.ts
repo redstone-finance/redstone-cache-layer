@@ -33,15 +33,12 @@ describe("Testing packages route", () => {
     evmSignature: Buffer.from(evmSignature, "base64"),
     liteEvmSignature: Buffer.from(liteEvmSignature, "base64"),
     version: "0.4",
-    source: {"test": 123},
+    source: { test: 123 },
     timestamp: testTimestamp,
   };
 
   test("Should post a package and fetch it", async () => {
-    await request(app)
-      .post("/packages")
-      .send(testPackage)
-      .expect(200);
+    await request(app).post("/packages").send(testPackage).expect(200);
 
     const response = await request(app)
       .get(`/packages/latest?provider=${provider.name}`)
@@ -58,19 +55,71 @@ describe("Testing packages route", () => {
     await new Price({
       ...testPrice,
     }).save();
-    // await new Package(testPackage).save();
+
+    // When
+    const response = await request(app).get("/packages/latest").query({
+      provider: provider.name,
+      symbol: testPrice.symbol,
+    });
+
+    // Then
+    expect(response.body).toEqual({
+      ...testPackage,
+      signer: "0x926E370fD53c23f8B71ad2B3217b227E41A92b12",
+      signature: evmSignature,
+      liteSignature: liteEvmSignature,
+      prices: [_.pick(testPrice, ["value", "symbol"])],
+    });
+  });
+
+  test("Should get a historical package", async () => {
+    const olderPackage = {
+      ...testPackage,
+      timestamp: testPackage.timestamp - 50 * 1000,
+    };
+    await request(app).post("/packages").send(testPackage).expect(200);
+    await request(app).post("/packages").send(olderPackage).expect(200);
+
+    const response = await request(app)
+      .get(
+        `/packages/?provider=${provider.name}&toTimestamp=${
+          olderPackage.timestamp + 1
+        }`
+      )
+      .expect(200);
+
+    expect(response.body).toEqual({
+      ...olderPackage,
+      prices: [],
+    });
+  });
+
+  test("Should get a historical package by symbol", async () => {
+    // Given
+    const olderPrice = {
+      ...testPrice,
+      timestamp: testPrice.timestamp - 50 * 1000,
+    };
+    await new Price({
+      ...testPrice,
+    }).save();
+    await new Price({
+      ...olderPrice,
+    }).save();
 
     // When
     const response = await request(app)
-      .get("/packages/latest")
+      .get("/packages")
       .query({
         provider: provider.name,
         symbol: testPrice.symbol,
+        toTimestamp: olderPrice.timestamp + 1,
       });
 
     // Then
     expect(response.body).toEqual({
       ...testPackage,
+      timestamp: olderPrice.timestamp,
       signer: "0x926E370fD53c23f8B71ad2B3217b227E41A92b12",
       signature: evmSignature,
       liteSignature: liteEvmSignature,
