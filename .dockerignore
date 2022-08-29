@@ -107,3 +107,7 @@ dist
 .secrets.json
 
 .exp
+
+.idea
+.github
+deploy/

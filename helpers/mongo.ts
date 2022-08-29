@@ -1,4 +1,4 @@
-import mongoose, { FilterQuery, Model } from "mongoose";
+import mongoose, {ConnectOptions, FilterQuery, Model} from "mongoose";
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { logger } from "./logger";
 
@@ -17,8 +17,8 @@ export const tryCleanCollection = async (model: Model<any>, query: FilterQuery<a
   }
 }
 
-export const connectToRemoteMongo = async (url: string) => {
-  await mongoose.connect(url)
+export const connectToRemoteMongo = async (url: string, options?: ConnectOptions) => {
+  await mongoose.connect(url, options);
   logger.info("Connected to mongoDB");
 }
 
