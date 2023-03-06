@@ -2,7 +2,13 @@ import { Request, Router } from "express";
 import asyncHandler from "express-async-handler";
 import { FilterQuery, PipelineStage, Document } from "mongoose";
 import _ from "lodash";
-import { bigLimitWithMargin, defaultLimit, cacheTTLMilliseconds, maxLimitForPrices, enableLiteMode } from "../config";
+import {
+  bigLimitWithMargin,
+  defaultLimit,
+  cacheTTLMilliseconds,
+  maxLimitForPrices,
+  enableLiteMode,
+} from "../config";
 import { Price, priceToObject } from "../models/price";
 import { logEvent } from "../helpers/amplitude-event-logger";
 import { assertValidSignature } from "../helpers/signature-verifier";
@@ -10,7 +16,8 @@ import { priceParamsToPriceObj, getProviderFromParams } from "../utils";
 import { logger } from "../helpers/logger";
 import { tryCleanCollection } from "../helpers/mongo";
 
-export interface PriceWithParams extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature">  {
+export interface PriceWithParams
+  extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
   limit?: number;
   offset?: number;
   fromTimestamp?: number;
@@ -26,7 +33,7 @@ export interface PriceWithParams extends Omit<Price, "signature" | "evmSignature
 const addSinglePrice = async (params: PriceWithParams) => {
   const price = new Price(priceParamsToPriceObj(params));
   await price.save();
-}
+};
 
 const getLatestPricesForSingleToken = async (params: PriceWithParams) => {
   validateParams(params, ["symbol"]);
@@ -39,7 +46,7 @@ const getLatestPricesForSingleToken = async (params: PriceWithParams) => {
     offset: params.offset,
   });
   return prices.map(priceToObject);
-}
+};
 
 const addSeveralPrices = async (params: PriceWithParams[]) => {
   const ops = [];
@@ -51,7 +58,7 @@ const addSeveralPrices = async (params: PriceWithParams[]) => {
     });
   }
   await Price.bulkWrite(ops);
-}
+};
 
 const getPriceForManyTokens = async (params: PriceWithParams) => {
   // Parsing symbols params
@@ -76,7 +83,6 @@ const getPriceForManyTokens = async (params: PriceWithParams) => {
   // Building tokens object
   const tokensResponse = {};
   for (const price of prices) {
-
     // We currently filter here
     if (tokens.length === 0 || tokens.includes(price.symbol)) {
       if (tokensResponse[price.symbol] === undefined) {
@@ -90,14 +96,14 @@ const getPriceForManyTokens = async (params: PriceWithParams) => {
   }
 
   return tokensResponse;
-}
+};
 
 const getHistoricalPricesForSingleToken = async (params: PriceWithParams) => {
   validateParams(params, ["symbol"]);
   const filters = {
     symbol: params.symbol,
     provider: params.provider,
-    timestamp: { $lte: params.toTimestamp } as { $lte: number, $gte?: number },
+    timestamp: { $lte: params.toTimestamp } as { $lte: number; $gte?: number },
   };
 
   if (params.fromTimestamp) {
@@ -110,13 +116,26 @@ const getHistoricalPricesForSingleToken = async (params: PriceWithParams) => {
     limit: params.limit || defaultLimit,
   });
   return prices.map(priceToObject);
-}
+};
 
 // This function is used to return data for charts
 const getPricesInTimeRangeForSingleToken = async (params: PriceWithParams) => {
-  validateParams(params,
-    ["symbol", "fromTimestamp", "toTimestamp", "interval", "provider"]);
-  const { symbol, provider, fromTimestamp, toTimestamp, interval, offset, limit } = params;
+  validateParams(params, [
+    "symbol",
+    "fromTimestamp",
+    "toTimestamp",
+    "interval",
+    "provider",
+  ]);
+  const {
+    symbol,
+    provider,
+    fromTimestamp,
+    toTimestamp,
+    interval,
+    offset,
+    limit,
+  } = params;
   const pipeline = [
     {
       $match: {
@@ -165,7 +184,8 @@ const getPricesInTimeRangeForSingleToken = async (params: PriceWithParams) => {
   // so we can not filter them out in DB query level
   const millisecondsInMinute = 60 * 1000;
   if (interval > millisecondsInMinute && prices.length > 0) {
-    let filteredPrices = [], prevTimestamp = prices[0].timestamp;
+    let filteredPrices = [],
+      prevTimestamp = prices[0].timestamp;
     for (const price of prices) {
       const diff = price.timestamp - prevTimestamp;
       if (diff === 0 || diff > millisecondsInMinute) {
@@ -177,10 +197,10 @@ const getPricesInTimeRangeForSingleToken = async (params: PriceWithParams) => {
   }
 
   return prices;
-}
+};
 
 const getPrices = async ({
-  filters = {},   
+  filters = {},
   limit = defaultLimit,
   offset,
 }: {
@@ -189,21 +209,23 @@ const getPrices = async ({
   offset: number;
 }) => {
   // Query building
-  let pricesQuery = Price
-    .find(filters)
+  let pricesQuery = Price.find(filters)
     .sort({ timestamp: -1 })
     .limit(Math.min(Number(limit), maxLimitForPrices));
   if (offset) {
     pricesQuery = pricesQuery.skip(Number(offset));
   }
-  
+
   // Query executing
   const prices = await pricesQuery.exec();
 
   return prices;
-}
+};
 
-const validateParams = (params: Record<string, any>, requiredParams: string[]) => {
+const validateParams = (
+  params: Record<string, any>,
+  requiredParams: string[]
+) => {
   const errors = [];
   for (const requiredParam of requiredParams) {
     if (params[requiredParam] === undefined) {
@@ -214,7 +236,7 @@ const validateParams = (params: Record<string, any>, requiredParams: string[]) =
   if (errors.length > 0) {
     throw new Error(JSON.stringify(errors));
   }
-}
+};
 
 const getPricesCount = (reqBody: PriceWithParams) => {
   if (Array.isArray(reqBody)) {
@@ -222,15 +244,15 @@ const getPricesCount = (reqBody: PriceWithParams) => {
   } else {
     return 1;
   }
-}
+};
 
 const getIp = (req: Request) => {
   const ip = req.ip;
   logger.info("Request IP address: " + ip);
   return ip;
-}
+};
 
-interface QueryParams extends PriceWithParams{
+interface QueryParams extends PriceWithParams {
   provider: string;
   symbols?: string;
   tokens?: string[];
@@ -241,110 +263,123 @@ export const prices = (router: Router) => {
   /**
    * This endpoint is used for fetching prices data.
    * It is used in redstone-api
-  */
-  router.get("/prices", asyncHandler(async (req, res) => {
-    // Request validation
-    const params = req.query as unknown as QueryParams;
+   */
+  router.get(
+    "/prices",
+    asyncHandler(async (req, res) => {
+      // Request validation
+      const params = req.query as unknown as QueryParams;
 
-    // Saving API read event in amplitude
-    logEvent({
-      eventName: "api-get-request",
-      eventProps: params,
-      ip: getIp(req),
-    });
+      // Saving API read event in amplitude
+      logEvent({
+        eventName: "api-get-request",
+        eventProps: params,
+        ip: getIp(req),
+      });
 
-    // Getting provider details
-    const providerDetails = await getProviderFromParams(params);
-    params.provider = providerDetails.address;
-    params.providerPublicKey = providerDetails.publicKey;
+      // Getting provider details
+      const providerDetails = await getProviderFromParams(params);
+      params.provider = providerDetails.address;
+      params.providerPublicKey = providerDetails.publicKey;
 
-    // If query params contain "symbol" we fetch price for this symbol
-    if (params.symbol !== undefined) {
-      let body: _.Omit<Document<unknown, any, Price> & Price & { providerPublicKey: any; }, "_id" | "__v">[];
-      if (params.interval !== undefined) {
-        body = await getPricesInTimeRangeForSingleToken(params);
-      } else if (params.toTimestamp !== undefined) {
-        body = await getHistoricalPricesForSingleToken(params);
-      } else {
-        body = await getLatestPricesForSingleToken(params);
+      // If query params contain "symbol" we fetch price for this symbol
+      if (params.symbol !== undefined) {
+        let body: _.Omit<
+          Document<unknown, any, Price> & Price & { providerPublicKey: any },
+          "_id" | "__v"
+        >[];
+        if (params.interval !== undefined) {
+          body = await getPricesInTimeRangeForSingleToken(params);
+        } else if (params.toTimestamp !== undefined) {
+          body = await getHistoricalPricesForSingleToken(params);
+        } else {
+          body = await getLatestPricesForSingleToken(params);
+        }
+        return res.json(body);
       }
-      return res.json(body);
-    }
-    // Otherwise we fetch prices for many symbols
-    else {
-      let tokens = [];
-      if (params.symbols !== undefined) {
-        tokens = params.symbols.split(",");
+      // Otherwise we fetch prices for many symbols
+      else {
+        let tokens = [];
+        if (params.symbols !== undefined) {
+          tokens = params.symbols.split(",");
+        }
+        params.tokens = tokens;
+
+        const body = await getPriceForManyTokens(params);
+        return res.json(body);
       }
-      params.tokens = tokens;
-
-      const body = await getPriceForManyTokens(params);
-      return res.json(body);
-    }
-  }));
-
+    })
+  );
 
   /**
    * This endpoint is used for posting a new price data.
    * It supports posting a single price and several prices
-  */
-  router.post("/prices", asyncHandler(async (req, res) => {
-    const reqBody = req.body as PriceWithParams;
-    let pricesSavedCount = 0;
+   */
+  router.post(
+    "/prices",
+    asyncHandler(async (req, res) => {
+      const reqBody = req.body as PriceWithParams;
+      let pricesSavedCount = 0;
 
-    // Saving API post event in amplitude
-    logEvent({
-      eventName: "api-post-request",
-      eventProps: {
-        pricesCount: getPricesCount(reqBody),
-      },
-      ip: getIp(req),
-    });
+      // Saving API post event in amplitude
+      logEvent({
+        eventName: "api-post-request",
+        eventProps: {
+          pricesCount: getPricesCount(reqBody),
+        },
+        ip: getIp(req),
+      });
 
-    if (Array.isArray(reqBody)) {
-      const invalidPrices = reqBody.filter(p => !p.value);
-      if (invalidPrices.length > 0) {
-        logger.error(
-          "Invalid prices with empty value: " + JSON.stringify(invalidPrices));
+      if (Array.isArray(reqBody)) {
+        const invalidPrices = reqBody.filter((p) => !p.value);
+        if (invalidPrices.length > 0) {
+          logger.error(
+            "Invalid prices with empty value: " + JSON.stringify(invalidPrices)
+          );
+        }
+
+        // Validating a signature of a randomly selected price
+        // We got rid of arweave signatures
+        // const priceToVerify = _.sample(reqBody);
+        // await assertValidSignature(priceToVerify);
+
+        // Adding several prices
+        await addSeveralPrices(reqBody);
+
+        // Cleaning older prices for the same provider after posting
+        // new ones in the lite mode
+        if (enableLiteMode) {
+          await tryCleanCollection(Price, {
+            provider: reqBody[0].provider,
+            timestamp: {
+              $lt: Number(reqBody[0].timestamp) - cacheTTLMilliseconds,
+            },
+          });
+        }
+
+        pricesSavedCount = reqBody.length;
+      } else {
+        // Validating the price signature
+        await assertValidSignature(reqBody);
+
+        // Adding a single price
+        await addSinglePrice(reqBody);
+        pricesSavedCount = 1;
+
+        // Cleaning prices for the same provider and symbol before posting
+        // a new one in the lite mode
+        if (enableLiteMode) {
+          await tryCleanCollection(Price, {
+            provider: reqBody.provider,
+            symbol: reqBody.symbol,
+            timestamp: {
+              $lt: Number(reqBody.timestamp) - cacheTTLMilliseconds,
+            },
+          });
+        }
       }
 
-      // Validating a signature of a randomly selected price
-      // We got rid of arweave signatures
-      // const priceToVerify = _.sample(reqBody);
-      // await assertValidSignature(priceToVerify);
-
-      // Adding several prices
-      await addSeveralPrices(reqBody);
-
-      // Cleaning older prices for the same provider after posting
-      // new ones in the lite mode
-      if (enableLiteMode) {
-        await tryCleanCollection(Price, {
-          provider: reqBody[0].provider,
-          timestamp: { $lt: Number(reqBody[0].timestamp) - cacheTTLMilliseconds },
-        });
-      }
-      
-      pricesSavedCount = reqBody.length;
-    } else {
-      // Validating the price signature
-      await assertValidSignature(reqBody);
-
-      // Adding a single price
-      await addSinglePrice(reqBody);
-      pricesSavedCount = 1;
-
-      // Cleaning prices for the same provider and symbol before posting
-      // a new one in the lite mode
-      if (enableLiteMode) {
-        await tryCleanCollection(Price, {
-          provider: reqBody.provider,
-          symbol: reqBody.symbol,
-          timestamp: { $lt: Number(reqBody.timestamp) - cacheTTLMilliseconds },
-        });
-      }
-    }
-
-    return res.json({ msg: `Prices saved. count: ${pricesSavedCount}` });
-  }));
+      return res.json({ msg: `Prices saved. count: ${pricesSavedCount}` });
+    })
+  );
 };
