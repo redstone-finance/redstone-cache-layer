@@ -17,6 +17,7 @@
     "arweave": "^1.10.14",
     "aws-sdk": "^2.931.0",
     "aws-serverless-express": "^3.4.0",
+    "axios": "^1.3.4",
     "body-parser": "^1.19.0",
     "consola": "^2.15.3",
     "cors": "^2.8.5",
@@ -26,8 +27,7 @@
     "express-async-handler": "^1.1.4",
     "lodash": "^4.17.21",
     "mongodb-memory-server": "^7.5.1",
-    "mongoose": "^6.3.4",
-    "redstone-node": "^0.4.37"
+    "mongoose": "^6.3.4"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.101",
