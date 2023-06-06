@@ -261,6 +261,63 @@ const providers = {
     ecdsaPublicKey:
       "0x045397fedb12fa8541458c6f9689b79683df32b9f9e3e3414afa8297fa1e55ee97fc972ef3b03a2f1889b7b33226e2417f4726e71d8fa4cb836649caa9a3d0db1f",
   },
+
+  "redstone-primary-demo-node-1": {
+    address: "HebMpM4xI07ev3jbEWamFNmRxu2ojflQfh0b2lpjFoM",
+    publicKey:
+      "sfTEXB9ljPagrv7XodJlTs0fM1pQdsCZ5iHC6mWsFpYgNUIPX6vkA4yoEjGh3naoLz5qKYtML3RIyI6z-syI2JV7TFUyEGunSDyzWg7ZZDxeG16RwpUhsPSJ7z7eSA91YAVAYJOqzgcOI_RsdgAHrtH64apLp_8uJcndJ_oXpEuoKRO2SjE2wSnwkHodHK6F-koov8rNY6edBLfmfjtKzzS-8X8g0oKSVzNdiov_WZ0UlUelsVhd-KoC6S65QT1yg7TbVRQP0ZBhfMvtpoZh8y8ftj9VaTsIaZcu77LR1tc6zCLThZAbclGYPM1EWxJ8vUDp5XYSxF6AvTFAj2NpvHDW94Mln3ZYTv2a4UobOruO9rA4npduHlo-5klgFxJGVjGsK-w18pk13KozmW5P_DZPwK_5rcKwvUakUYY2OCF_lismG7UiIPRGtQkoWffaZDfuMI2ONidtGskqFBjgySFsdMt07Wt10h5WbLI5xmUoBpdrxQarfzECCyQ4QT--GOmtaS8G7PUbYMtpgGk4nxZnqqzNidRez_0bQLQbsIMMej9HTNvkiwW9w5e374Ek8JjiCw77yUcE2e1vUAr-IqrHD5LFSmB-H5JM_GoIGhTEjYU_-v3RkeiklwmuWBPzLdyL2mMZPANacW6cOWt4g6DyXTjRKSLY0UiPuGsJT1c",
+    evmAddress: "0xdE13FdEE7a9B483129a81794d02FCB4021069f0C",
+    ecdsaPublicKey:
+      "0x041c320fdaca2d381101d85f2e0fcf9c6d6ebb88f2a3b71a20ecf229c1cd0e81b541d6960b58666fce5abba84a460590c72f4e871d87b451f0b7823f98d0c41970",
+  },
+  "redstone-primary-demo-node-2": {
+    address: "-qrcZLkqrgS9cNhLvy0c7gzpkGlAgwbZ6C3_hk2vvJQ",
+    publicKey:
+      "1OgIYqYOFlYr-Yo_cFdnWisxRv8B-2x2zroc0Kcn6_f8yiD7yZBVFQOBOh-kVfcmVrCuBYPywvJevmMgIkg2t4xOsoG0y_liTYAYKjhT2tiV8xta1ykq0xvLiOVOQY4g7GCzcCV-ZPE9xc4bI9ozYnpS4NRjJM8_mOnS9I1lrefx7pjHsrTyrB3YGmmW2WJm9o1MS225PFzDmPSEghw3jlVsf-KtDXqxCCpRZGTI1kKZJ-Snm9k_19tK9MHGfVGsmT8pZJjsJmLJXHrLl1KVgDXsjxxcU2f6ZycSj5imP024Dc5w65aV1JXEey9a0wLz4y1DpxPbrUN617zL1-6xA3PyQBbbI2tpM808UILlYAYWZPBeS9-87j9Abn7wDtBuqGGribdYH-KT61lF14xozCWj8SwKk9ZiMsuk8XhTlmzWa2_xwMpDFX_GVwyueZWR4lx1PK3AMWOVfITj8xU9iPHA2msL9AZ9Hj1R12k0DXGn7pjHwUgSNXCe46nIBbjEoUVtihDGAddwXAyhBVSFriDsfqWDftYEigGbNccQh8JVfRJraP20saJLlwnFL5rYhd1nSFzEwi3yIFA2X-PjudxWHa2mTGwZYCtTMkOa2E5ucQUp8eA-N-fQJF1YNNeznv5IA-yN4e35zuVUC7dNq364bUogDAqTMojRFMzhpas",
+    evmAddress: "0xad05Ce43E0bCD11345f08a28995951DEc30D5226",
+    ecdsaPublicKey:
+      "0x04440a1d2f497db99d7282bf6ccaf133995ed05f992c177c1eaf7b861a9e64261d1da123bcefa6bed232755197fc5082d42696e72aaf42b45771eba336d693b9b3",
+  },
+  "redstone-primary-prod-node-1": {
+    address: "R4ih95AvybIzz3uKuEmpBee17J73CGkSk4bvzU_IZ_I",
+    publicKey:
+      "nLzSke0nHxv_kp-NVMrjlXQtVZpNlFyUybEIVZx17IAwIBRrqNJBJ5pR0_nbgtJTwXg32YiLs_1ETBaazj1HL22au_kSxa5zkHsomEi7wmioAYGN2LGcaeUWlrPq8zwDk5IniSHkGdJ7wuCLig2OyVoYpINGvRchy9NOpWylAyJjHdcOkEDTAFHKeKWAs0SeAo-VSr_V53yyRSQ-ecOpcSAMWtx-jOkxgNoMPHAX-79arV206Q-sFjGNobceNl-NhCKOEOy4BjHCQm0XVUApXQx_hVrej_j-DE3QbCGCcgskrvpYFrB7ZGfCVYToH3GDe-orbCH_Qa9Q88uIR9-hIRWnTcES3RDdb-72bvVdJVyvMqKWXdtjB-3aYS6Klyx6H7l2hYdesQzEv4IqOFctoyUqq3ECZkW5ZTZzo-vg2QatwquY12kkOB7PAkZRYjc6HEoWnZy2qv4M4RnpMiYpgjww4kcryXBBZqy4X-xAkJAjWt-XDTpIWmLBtgu9plZiOhmqgARyMtuF0NspFZCu7g5PfeQVo5lzv16CPXimXpPLhxiVoOxjSKHTeuv0xIPA9cNO_6K0XTSdUYlzkDdcnQIg5SKI3b9kE3JSkiVjjk0EfhZdrBaWolS__NNEBzqjMU5TR4bk9BQ5CTOaqXDIbCEK2_GMaJ6pzjGPfRZaMu0",
+    evmAddress: "0x8BB8F32Df04c8b654987DAaeD53D6B6091e3B774",
+    ecdsaPublicKey:
+      "0x049a0e6cada7938a0fc616578aff2b11337d90ec4e99e9fee95e57e9d8371562b31698225fb73c666ba586842b913e67ad289f374f7a46fc873342f805a8683d4e",
+  },
+  "redstone-primary-prod-node-2": {
+    address: "WM9CHZ6CKf95z47krdOFFKX6kuOusBlyIVSJmcjdrEQ",
+    publicKey:
+      "yE4SZn6OcwBG0Zb4Awm9bS6rqJMcy3ldVosxCiI7bwCYsRjA_fArgtuDG9b-B6xxEC1pY0TBAJSN3HKo8XIDGJNh_xHoA__Yi_Q4OGmtFqGWbQmP78piaJ3vn9nR-vwFGPnZPLzKinzKxHKNGH16gkhblszX59oUlUQP1o2slFmD6UsJX-K3LqWSN5u_1snW4eNpyPY0UbtuNvVvSNJeaT4D7zPYhZhpt5WrYZBzmTq8HoK290wb1L-Okik072aw9XMrFNBiyyQd0thAAobferTm8Ch-lcfigwkaHDEtwD2GoJIJZ69oTX810OFz-m4JomEBck4B1dSou3aPJhjK_bnsgLztiG6N7DHps7XOyD6vVo2rJpYWMPmxLtWeXIgmNSDjypUuDH4hJOT_kp3FO5YvHBhL__RY__wNBvJ5XizilD6Rrom3PQMKmu4QWY84JDE7L1QHrwsEo7UKYpT3aNF-rrFiYYTn77fLN6iKkzouLf21etNoTqRAo-ftzTiiUtJ9ubBnYd4ne7AKRzZTS-dEOImA8w6MGjN0rkqaI78ihgIO9Zu_BClOZdWqRg3j-nwyzGcOcQeKjOU3HAWiotuioLBy603utiC7lRl8g-0VprAZfWOpJhfTX1EHyoI3AAY92joj4U_Cig8-9tCRh06BN3HaNobdQgkLeEk5KpU",
+    evmAddress: "0xdEB22f54738d54976C4c0fe5ce6d408E40d88499",
+    ecdsaPublicKey:
+      "0x04683f7100d67fbaccae68db4d146f7bc3090c5cbcb1351e333efd58d42f609ceeada12b0af28a6e789d6edfe25fe784dd1e86798240d4cee9f60e56848cb55965",
+  },
+  "redstone-primary-prod-node-3": {
+    address: "9syjTFZp0__CsqnMjKEo6sjl6_yRWYm7TQjcD0hFEN8",
+    publicKey:
+      "uFmwr5_2RAokGbqABO6edwcbsVhctDmKWG-velfxBvqjGU9YUc3QIentdWPBEaA4xcXlQC1fz8-woXEqqUjTjYyDpZ_1FEaftIVgQFyxzT2OW--8Mnox7uwqvmtAZLejxRibj4YYyqxO81tF4m5MVpgewoBBep0p_nCsBtN50iV4VtG6oPOOiFa9p1Hk-h2ja8K57qfn3Pxh6g2jmk2FVCo9JAgHCoSat8IT_QQ9BRw4pOTyZbTzM-7K28FjKHJqaQ8fRK0bZkMmzt8LhXUZVQCqHWeaLaMoNFikDTWZ_ia-SEr6_T_QlybPoj07TIwkMpVNDMAFcmltHBoLtNDfXG3fyDAQe9fZPp4H4ER5VLi_MoEB0UM2feLZNIpiwSCWEtOUvamBaCbtRBObdQZPphbP3Iof2VZvavnwHRE5FHnLFuXpnwMPmJADDwIdetUxNKW42QGl5nG43IC18ufYBH-hV6rEdlxd5hHPqw7wknGQ9fW_686Z_qE2U7Lc37OO0a1tT6877IuOYpO8GGm5YOS0lc0A7jP5RBO5EWsS_8xZyKKo2aUP5f39-WZid6lRAtwseSvr9oJbRLS5jfCGb9WTJ0VzQEgCpcp1eVaMSDBvXb-4p6lOr1Z7OD0loSHiAsNZWUdAqmRLAZROZsXI6r_z5J_vrW82ZkFTRIeNdeE",
+    evmAddress: "0x51Ce04Be4b3E32572C4Ec9135221d0691Ba7d202",
+    ecdsaPublicKey:
+      "0x04490f08821dea02d23683f170459aa6317dd65b544aac1df514f2e657f87ac00b81757edce3e78785e00dcd92e2dc8ddd9a680dc929a0c91062d87ae000a217ce",
+  },
+  "redstone-primary-prod-node-4": {
+    address: "4dRTLZeJPaDMhGE2jUndt-3KIOQxO6Y_BCV-3KIiPhI",
+    publicKey:
+      "3gACwmU3yQTUU4eHYWvWYzXh96royDi3Uce7shiBk0TeK2aaKGqR0pswjbWLUF1A22JmfuD-ItrkKKAfX5Mhj7GgFrDcPA0D2soA0hRQGh5qkLi4iSxXb8BdD4suG-dN2y2_Zn1zMmcoWHHxgxmr-mtD5t4H1CrIxFF4dLQWJ44ydFwTmIxvVaZzSYA8sC5z2Q_hIzr90Z1DdEJUcJomXbKPeymeuVeKxCfPab93czr5-wm11I_sNx9dTTzRW90_jiZ99aSbSVY_R6jWQ2vAfbCqoHIqsHEk7Yc4WNjXlh7aZMBi5hPW3zrnN-ZnDDLXgBu4KrBqAFH-8jL4sfwe51ifKkosRu0DLx0kItpp3mgkKVUcsR513kQE49bxmFhhy3dbyUoJktetrWqg6iMPHMMB4ybXHsoqOHXou1vPtLTCxtNvTZJvUes3v47fs-04ThebpyAPPEDrVqt4mNCYzapvDE-RgWrnQrKLAIbXJspcggro5u_rdNl4hSDGgmFJhXTu2AIVoAjNTk9ARXtgo4K8RWcQKjZ8qotq30NNwqNE9GVk2EEJDnj-Jj_1_Dtkd0jozE0VyjaA9eT5NyZ2s1tfVS2pbNCC18sezte0PGeAwD7EqoJoYxgbmX6MPQhfyanSc3KSYi9fi_YYYmHT0n_uCUy9QR2Zvz5895QETB0",
+    evmAddress: "0xDD682daEC5A90dD295d14DA4b0bec9281017b5bE",
+    ecdsaPublicKey:
+      "0x04a221496ff2436da121796c11f888cc4e2155da7e36bd1148c9466fb54627f15e42d4cfed06b1570b7ebe0c589acf91fd314cfd95303c9894c0be43432aba619f",
+  },
+  "redstone-primary-prod-node-5": {
+    address: "wZv_gFZgozLm2xjUaMZPzvgr6E4VcUlRZMXZOILfBXw",
+    publicKey:
+      "2p14sG942MfNwRQnPPF78vdxXovnz0hSTUYiSmCvPlQHojPQyDdfX2fbML09kbkeq8TNQel7BzShDVDpfhM21lXDQhvW8kQTSk6I2qilZIbYRi4i0omgHLw6QnUOGPBdxUdbRSq63gH5A0aR_ATPgzKNwSZpViG3CODgOVRUWtzWlaHKGx3D5oloKnS9nnJJlZSh2sbDfq7MIOlZEHDpunERLByLlsxi33oj1YsrcV2rP_tUUDbuDNLWhwHorAjZqDKmPP0FEy38oABrB-NbDNihPs06V2wMNb4U6tlLiEcsfNTagWpQ8re6K3WpK5XKBOcaOhVqcmo2axP1go35pjV6RuISCQWGGqvnyeAsKdGjDANtSk5RYqjqy6cQTJfEKrHZbv2MaiLr5EUsnzP_9u4ZCo8vcVXj4BLLDIYNvm4b_Ik2j8ZoA432u2hAMtQYZNqfencj9kiKzBRoeDQF4nsJOQ5YUHkyS_a1Vnq0KPslPbACApJZntCz3LR2Te_ZxJePM_v9O6jtX2bTsRgkjGF5dWD4OFda89mFSKn9ZBzgysMTWiJsLYnnqPVW8zIP2PjG7VgfkpEIDzWFbCJiX2aevGT94P5pTuI9AF1cyKMX0kxeDibbqg6m9LixPqY0Kdm6pOwGa1RWP2tprPoQuS9uepP1vyzJEzk6jAyaQqU",
+    evmAddress: "0x9c5AE89C4Af6aA32cE58588DBaF90d18a855B6de",
+    ecdsaPublicKey:
+      "0x04f23aa199aeda6e55628e0ec88194c47713ba260898aae4483fb2f166c7e29b1664f817922059736358de71bdf374b3354db58d15f928a6fac9d1f61e284019b7",
+  },
 };
 
 export const getProviders = () => {
@@ -280,7 +337,10 @@ export const getEvmAddressForProviderAddress = (address: string) => {
 export const findProviderDetailsByAddress = (address: string) => {
   for (const providerName in providers) {
     const details = providers[providerName];
-    if (details.address === address) {
+    if (
+      details.address === address ||
+      details.evmAddress.toLowerCase() === address.toLowerCase()
+    ) {
       return details;
     }
   }
