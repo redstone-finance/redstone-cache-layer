@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "run-ts": "ts-node",
     "start": "ts-node -e 'require(\"./index\").runLocalServer()'",
     "dev": "MODE=LOCAL node -e 'require(\"./index\").runLocalServer()'",
     "test": "jest --coverage",
@@ -45,6 +46,7 @@
     "sleep-promise": "^9.1.0",
     "supertest": "^6.1.3",
     "ts-jest": "^28.0.3",
+    "ts-node": "^10.9.1",
     "tsc": "^2.0.4",
     "typescript": "^4.7.2",
     "uuid-random": "^1.3.2"
