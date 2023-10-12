@@ -15,6 +15,7 @@ import { assertValidSignature } from "../helpers/signature-verifier";
 import { priceParamsToPriceObj, getProviderFromParams } from "../utils";
 import { logger } from "../helpers/logger";
 import { tryCleanCollection } from "../helpers/mongo";
+import { throwExpiredApiError } from "./configs";
 
 export interface PriceWithParams
   extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
@@ -267,47 +268,7 @@ export const prices = (router: Router) => {
   router.get(
     "/prices",
     asyncHandler(async (req, res) => {
-      // Request validation
-      const params = req.query as unknown as QueryParams;
-
-      // Saving API read event in amplitude
-      logEvent({
-        eventName: "api-get-request",
-        eventProps: params,
-        ip: getIp(req),
-      });
-
-      // Getting provider details
-      const providerDetails = await getProviderFromParams(params);
-      params.provider = providerDetails.address;
-      params.providerPublicKey = providerDetails.publicKey;
-
-      // If query params contain "symbol" we fetch price for this symbol
-      if (params.symbol !== undefined) {
-        let body: _.Omit<
-          Document<unknown, any, Price> & Price & { providerPublicKey: any },
-          "_id" | "__v"
-        >[];
-        if (params.interval !== undefined) {
-          body = await getPricesInTimeRangeForSingleToken(params);
-        } else if (params.toTimestamp !== undefined) {
-          body = await getHistoricalPricesForSingleToken(params);
-        } else {
-          body = await getLatestPricesForSingleToken(params);
-        }
-        return res.json(body);
-      }
-      // Otherwise we fetch prices for many symbols
-      else {
-        let tokens = [];
-        if (params.symbols !== undefined) {
-          tokens = params.symbols.split(",");
-        }
-        params.tokens = tokens;
-
-        const body = await getPriceForManyTokens(params);
-        return res.json(body);
-      }
+      throwExpiredApiError();
     })
   );
 

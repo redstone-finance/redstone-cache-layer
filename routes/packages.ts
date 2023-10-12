@@ -7,57 +7,14 @@ import { tryCleanCollection } from "../helpers/mongo";
 import { enableLiteMode, cacheTTLMilliseconds } from "../config";
 import { Router } from "express";
 import { Document } from "mongoose";
+import { throwExpiredApiError } from "./configs";
 
 const dbItemToObj = (item: Document<unknown, any, Package> & Package) => {
   return _.omit(item.toObject(), ["_id", "__v"]);
 };
 
 const findPackage = async (req, res, initialMongoQuery) => {
-  const provider = await getProviderFromParams(
-    req.query as { provider: string }
-  );
-
-  if (!provider.address) {
-    throw new Error("Provider address is required");
-  }
-
-  const symbol = req.query.symbol as string;
-
-  if (symbol) {
-    // Fetching latest price for symbol from DB
-    const price = await Price.findOne({
-      ...initialMongoQuery,
-      provider: provider.address,
-      symbol,
-    }).sort({ timestamp: -1 });
-
-    if (!price) {
-      throw new Error(`Requested package not found for symbol: ${symbol}`);
-    }
-
-    const responseObj = {
-      ..._.pick(price, ["timestamp", "provider"]),
-      signature: price.evmSignature?.toString("base64"),
-      liteSignature: price.liteEvmSignature.toString("base64"),
-      prices: [{ symbol, value: price.value }],
-      signer: provider.evmAddress, // TODO: we don't really need signer, as it must be fetched from a trusted source or hardcoded in the redstone-evm-connector
-    };
-
-    return res.json(responseObj);
-  } else {
-    // Fetching latest package from DB
-    const packageFromDB = await Package.findOne({
-      ...initialMongoQuery,
-      provider: provider.address,
-    }).sort({ timestamp: -1 });
-
-    if (!packageFromDB) {
-      throw new Error(`Requested package not found`);
-    }
-
-    const responseObj = dbItemToObj(packageFromDB);
-    return res.json(responseObj);
-  }
+  throwExpiredApiError();
 };
 
 export const packages = (router: Router) => {
@@ -106,14 +63,7 @@ export const packages = (router: Router) => {
   router.get(
     "/packages",
     asyncHandler(async (req, res) => {
-      if (!req.query.toTimestamp) {
-        throw new Error("toTimestamp query param is required");
-      }
-
-      const initialMongoQuery = {
-        timestamp: { $lte: req.query.toTimestamp },
-      };
-      return await findPackage(req, res, initialMongoQuery);
+      throwExpiredApiError();
     })
   );
 };
