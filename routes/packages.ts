@@ -8,14 +8,8 @@ import { enableLiteMode, cacheTTLMilliseconds } from "../config";
 import { Router } from "express";
 import { Document } from "mongoose";
 import { throwExpiredApiError } from "./configs";
-
-const dbItemToObj = (item: Document<unknown, any, Package> & Package) => {
-  return _.omit(item.toObject(), ["_id", "__v"]);
-};
-
-const findPackage = async (req, res, initialMongoQuery) => {
-  throwExpiredApiError();
-};
+import { requestDataPackages } from "redstone-sdk";
+import { providerToDataServiceId } from "../providers";
 
 export const packages = (router: Router) => {
   /**
@@ -51,8 +45,30 @@ export const packages = (router: Router) => {
   router.get(
     "/packages/latest",
     asyncHandler(async (req, res) => {
-      const initialMongoQuery = {};
-      return await findPackage(req, res, initialMongoQuery);
+      const provider = await getProviderFromParams(
+        req.query as { provider: string }
+      );
+      const symbol = req.query.symbol as string;
+      const dataPackageResponse = await requestDataPackages({
+        dataServiceId: providerToDataServiceId[req.query.provider as string],
+        uniqueSignersCount: 1,
+        dataFeeds: [symbol],
+      });
+
+      const dataPackage = dataPackageResponse[symbol][0];
+      const timestamp = dataPackage.dataPackage.timestampMilliseconds;
+      const response = {
+        timestamp: timestamp,
+        provider: provider.address,
+        prices: [
+          {
+            symbol: symbol,
+            value: dataPackage.dataPackage.dataPoints[0].toObj().value,
+          },
+        ],
+      };
+
+      return res.json(response);
     })
   );
 
