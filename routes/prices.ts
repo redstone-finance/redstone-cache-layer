@@ -283,6 +283,14 @@ const mapToResponse = (dataPackage: any, provider: any) => {
   });
 };
 
+const toMap = (priceList: any) => {
+  let map = {};
+  for (const price of priceList) {
+    map[price.symbol] = price;
+  }
+  return map;
+};
+
 export const prices = (router: Router) => {
   /**
    * This endpoint is used for fetching prices data.
@@ -311,13 +319,20 @@ export const prices = (router: Router) => {
           uniqueSignersCount: 1,
           dataFeeds: tokens,
         });
+        return res.json(
+          toMap(
+            tokens
+              .map((token) => dataPackageResponse[token][0])
+              .flatMap((dataPackage) => mapToResponse(dataPackage, provider))
+          )
+        );
       } else {
         const dataPackageResponse = await requestDataPackages({
           dataServiceId: providerToDataServiceId[req.query.provider as string],
           uniqueSignersCount: 1,
         });
         const dataPackage = dataPackageResponse["___ALL_FEEDS___"][0];
-        return res.json(mapToResponse(dataPackage, provider));
+        return res.json(toMap(mapToResponse(dataPackage, provider)));
       }
     })
   );
