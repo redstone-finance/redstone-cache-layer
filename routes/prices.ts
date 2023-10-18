@@ -262,6 +262,27 @@ interface QueryParams extends PriceWithParams {
   providerPublicKey?: string;
 }
 
+const mapToResponse = (dataPackage: any, provider: any) => {
+  return dataPackage.dataPackage.dataPoints.map((point: any) => {
+    console.log(point);
+    const sourceMetadata = point.toObj().metadata.sourceMetadata;
+
+    let sourcesFormatted = {};
+    for (const [name, value] of Object.entries(sourceMetadata)) {
+      sourcesFormatted[name] = Number((value as any).value);
+    }
+    const timestamp = dataPackage.dataPackage.timestampMilliseconds;
+    return {
+      symbol: point.dataFeedId,
+      provider: provider.address,
+      value: point.toObj().value,
+      source: sourcesFormatted,
+      timestamp: timestamp,
+      providerPublicKey: provider.publicKey,
+    };
+  });
+};
+
 export const prices = (router: Router) => {
   /**
    * This endpoint is used for fetching prices data.
@@ -282,9 +303,6 @@ export const prices = (router: Router) => {
           dataFeeds: [symbol],
         });
         const dataPackage = dataPackageResponse[symbol][0];
-        console.log(
-          (dataPackage.dataPackage.dataPoints[0].toObj() as any).metadata
-        );
         const sources = (dataPackage.dataPackage.dataPoints[0].toObj() as any)
           .metadata.sourceMetadata;
 
@@ -306,7 +324,19 @@ export const prices = (router: Router) => {
 
         return res.json(response);
       } else if (symbols !== undefined) {
+        const tokens = symbols.split(",");
+        const dataPackageResponse = await requestDataPackages({
+          dataServiceId: providerToDataServiceId[req.query.provider as string],
+          uniqueSignersCount: 1,
+          dataFeeds: tokens,
+        });
       } else {
+        const dataPackageResponse = await requestDataPackages({
+          dataServiceId: providerToDataServiceId[req.query.provider as string],
+          uniqueSignersCount: 1,
+        });
+        const dataPackage = dataPackageResponse["___ALL_FEEDS___"][0];
+        return res.json(mapToResponse(dataPackage, provider));
       }
     })
   );
