@@ -16,6 +16,8 @@ import { priceParamsToPriceObj, getProviderFromParams } from "../utils";
 import { logger } from "../helpers/logger";
 import { tryCleanCollection } from "../helpers/mongo";
 import { throwExpiredApiError } from "./configs";
+import { requestDataPackages } from "redstone-sdk";
+import { providerToDataServiceId } from "../providers";
 
 export interface PriceWithParams
   extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
@@ -268,7 +270,44 @@ export const prices = (router: Router) => {
   router.get(
     "/prices",
     asyncHandler(async (req, res) => {
-      throwExpiredApiError();
+      const provider = await getProviderFromParams(
+        req.query as { provider: string }
+      );
+      const symbol = req.query.symbol as string;
+      const symbols = req.query.symbols as string;
+      if (symbol !== undefined) {
+        const dataPackageResponse = await requestDataPackages({
+          dataServiceId: providerToDataServiceId[req.query.provider as string],
+          uniqueSignersCount: 1,
+          dataFeeds: [symbol],
+        });
+        const dataPackage = dataPackageResponse[symbol][0];
+        console.log(
+          (dataPackage.dataPackage.dataPoints[0].toObj() as any).metadata
+        );
+        const sources = (dataPackage.dataPackage.dataPoints[0].toObj() as any)
+          .metadata.sourceMetadata;
+
+        let sourcesFormatted = {};
+        for (const [name, value] of Object.entries(sources)) {
+          sourcesFormatted[name] = Number((value as any).value);
+        }
+        const timestamp = dataPackage.dataPackage.timestampMilliseconds;
+        const response = [
+          {
+            symbol: symbol,
+            provider: provider.address,
+            value: dataPackage.dataPackage.dataPoints[0].toObj().value,
+            source: sourcesFormatted,
+            timestamp: timestamp,
+            providerPublicKey: provider.publicKey,
+          },
+        ];
+
+        return res.json(response);
+      } else if (symbols !== undefined) {
+      } else {
+      }
     })
   );
 
