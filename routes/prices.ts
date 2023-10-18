@@ -303,26 +303,7 @@ export const prices = (router: Router) => {
           dataFeeds: [symbol],
         });
         const dataPackage = dataPackageResponse[symbol][0];
-        const sources = (dataPackage.dataPackage.dataPoints[0].toObj() as any)
-          .metadata.sourceMetadata;
-
-        let sourcesFormatted = {};
-        for (const [name, value] of Object.entries(sources)) {
-          sourcesFormatted[name] = Number((value as any).value);
-        }
-        const timestamp = dataPackage.dataPackage.timestampMilliseconds;
-        const response = [
-          {
-            symbol: symbol,
-            provider: provider.address,
-            value: dataPackage.dataPackage.dataPoints[0].toObj().value,
-            source: sourcesFormatted,
-            timestamp: timestamp,
-            providerPublicKey: provider.publicKey,
-          },
-        ];
-
-        return res.json(response);
+        return res.json(mapToResponse(dataPackage, provider));
       } else if (symbols !== undefined) {
         const tokens = symbols.split(",");
         const dataPackageResponse = await requestDataPackages({
