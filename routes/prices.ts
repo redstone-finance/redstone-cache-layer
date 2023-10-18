@@ -279,6 +279,8 @@ const mapToResponse = (dataPackage: any, provider: any) => {
       source: sourcesFormatted,
       timestamp: timestamp,
       providerPublicKey: provider.publicKey,
+      permawebTx: "mock-permaweb-tx",
+      version: "0.3",
     };
   });
 };
