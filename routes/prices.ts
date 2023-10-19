@@ -264,7 +264,6 @@ interface QueryParams extends PriceWithParams {
 
 const mapToResponse = (dataPackage: any, provider: any) => {
   return dataPackage.dataPackage.dataPoints.map((point: any) => {
-    console.log(point);
     const sourceMetadata = point.toObj().metadata.sourceMetadata;
 
     let sourcesFormatted = {};
