@@ -94,6 +94,7 @@ export const packages = (router: Router) => {
   router.get(
     "/packages/latest",
     asyncHandler(async (req, res) => {
+      console.log("Getting latest packages")
       const initialMongoQuery = {};
       return await findPackage(req, res, initialMongoQuery);
     })
@@ -109,7 +110,7 @@ export const packages = (router: Router) => {
       if (!req.query.toTimestamp) {
         throw new Error("toTimestamp query param is required");
       }
-
+      console.log("Getting packages by timestamp")
       const initialMongoQuery = {
         timestamp: { $lte: req.query.toTimestamp },
       };
