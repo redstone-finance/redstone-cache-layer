@@ -15,3 +15,9 @@ export const configs = (router: Router) => {
     res.json(tokensConfigResponse.data);
   });
 };
+
+export function throwExpiredApiError() {
+  throw new Error(
+    'This API is expired. You can switch to redstone-sdk https://www.npmjs.com/package/redstone-sdk. If this API is necessary for your application - send us an email: dev@redstone.finance and set endpoint redstone.setCacheApiUrl("https://expiring.b.redstone.finance/prices") which will be also expired in few days.'
+  );
+}
