@@ -276,8 +276,8 @@ export const prices = (router: Router) => {
         eventProps: params,
         ip: getIp(req),
       });
-      console.log("Getting prices")
-
+      console.log("Getting prices");
+      console.log(`AllParams ${JSON.stringify(params)}`);
       // Getting provider details
       const providerDetails = await getProviderFromParams(params);
       params.provider = providerDetails.address;
