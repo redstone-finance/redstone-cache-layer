@@ -17,6 +17,8 @@ import { logger } from "../helpers/logger";
 import { tryCleanCollection } from "../helpers/mongo";
 import { requestDataPackages } from "redstone-sdk";
 import { providerToDataServiceId } from "../providers";
+import axios from "axios";
+import csvToJSON from "csv-file-to-json";
 
 export interface PriceWithParams
   extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
@@ -291,6 +293,21 @@ const toMap = (priceList: any) => {
   return map;
 };
 
+async function requestInflux(query: string) {
+  const config = {
+    headers: {
+      Authorization: `Token ${process.env.INFLUXDB_TOKEN}`,
+      "Content-Type": "application/vnd.flux",
+    },
+  };
+  const result = await axios.post(
+    `${process.env.INFLUXDB_URL}/api/v2/query?org=redstone`,
+    query,
+    config
+  );
+  const json = csvToJSON({ data: result.data });
+}
+
 export const prices = (router: Router) => {
   /**
    * This endpoint is used for fetching prices data.
@@ -322,6 +339,7 @@ export const prices = (router: Router) => {
         !params.limit &&
         shouldRunTestFeature()
       ) {
+        console.log("Running test feature");
         const provider = await getProviderFromParams(
           req.query as { provider: string }
         );

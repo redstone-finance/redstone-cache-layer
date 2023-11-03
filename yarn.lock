@@ -1897,6 +1897,11 @@ cross-spawn@^7.0.3:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
+csv-file-to-json@^4.0.5:
+  version "4.0.5"
+  resolved "https://registry.yarnpkg.com/csv-file-to-json/-/csv-file-to-json-4.0.5.tgz#277cf87ca2a16fd29192f79e368ef65c85582514"
+  integrity sha512-r1X/WS/mke9ozV3e11lHd+P8FFMttNepmfd9y8HXmbYRvLgFXEUKnYCQrQC56aJiNhRUwIxz/kdrcxMzBgYibg==
+
 debug@2.6.9:
   version "2.6.9"
   resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.9.tgz#5d128515df134ff327e90a4c93f4e077a536341f"

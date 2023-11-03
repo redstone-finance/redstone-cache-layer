@@ -21,6 +21,7 @@
     "body-parser": "^1.19.0",
     "consola": "^2.15.3",
     "cors": "^2.8.5",
+    "csv-file-to-json": "^4.0.5",
     "deep-sort-object": "^1.0.2",
     "errorhandler": "^1.5.1",
     "express": "^4.18.1",
