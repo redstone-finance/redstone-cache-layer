@@ -315,7 +315,10 @@ export const prices = (router: Router) => {
    */
 
   function shouldRunTestFeature() {
-    return Math.floor(Math.random() * 1000) < 200;
+    return (
+      Math.floor(Math.random() * 100) <
+      Number(process.env.PERCENT_OF_TEST_FEATURES)
+    );
   }
 
   router.get(
