@@ -15,6 +15,8 @@ import { assertValidSignature } from "../helpers/signature-verifier";
 import { priceParamsToPriceObj, getProviderFromParams } from "../utils";
 import { logger } from "../helpers/logger";
 import { tryCleanCollection } from "../helpers/mongo";
+import { requestDataPackages } from "redstone-sdk";
+import { providerToDataServiceId } from "../providers";
 
 export interface PriceWithParams
   extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
@@ -259,11 +261,46 @@ interface QueryParams extends PriceWithParams {
   providerPublicKey?: string;
 }
 
+const mapToResponse = (dataPackage: any, provider: any) => {
+  return dataPackage.dataPackage.dataPoints.map((point: any) => {
+    const sourceMetadata = point.toObj().metadata.sourceMetadata;
+
+    let sourcesFormatted = {};
+    for (const [name, value] of Object.entries(sourceMetadata)) {
+      sourcesFormatted[name] = Number((value as any).value);
+    }
+    const timestamp = dataPackage.dataPackage.timestampMilliseconds;
+    return {
+      symbol: point.dataFeedId,
+      provider: provider.address,
+      value: point.toObj().value,
+      source: sourcesFormatted,
+      timestamp: timestamp,
+      providerPublicKey: provider.publicKey,
+      permawebTx: "mock-permaweb-tx",
+      version: "0.3",
+    };
+  });
+};
+
+const toMap = (priceList: any) => {
+  let map = {};
+  for (const price of priceList) {
+    map[price.symbol] = price;
+  }
+  return map;
+};
+
 export const prices = (router: Router) => {
   /**
    * This endpoint is used for fetching prices data.
    * It is used in redstone-api
    */
+
+  function shouldRunTestFeature() {
+    return Math.floor(Math.random() * 1000) < 200;
+  }
+
   router.get(
     "/prices",
     asyncHandler(async (req, res) => {
@@ -278,6 +315,53 @@ export const prices = (router: Router) => {
       });
       console.log("Getting prices");
       console.log(`AllParams ${JSON.stringify(params)}`);
+
+      if (
+        !params.fromTimestamp &&
+        !params.toTimestamp &&
+        !params.limit &&
+        shouldRunTestFeature()
+      ) {
+        const provider = await getProviderFromParams(
+          req.query as { provider: string }
+        );
+        const symbol = req.query.symbol as string;
+        const symbols = req.query.symbols as string;
+        if (symbol !== undefined) {
+          const dataPackageResponse = await requestDataPackages({
+            dataServiceId:
+              providerToDataServiceId[req.query.provider as string],
+            uniqueSignersCount: 1,
+            dataFeeds: [symbol],
+          });
+          const dataPackage = dataPackageResponse[symbol][0];
+          return res.json(mapToResponse(dataPackage, provider));
+        } else if (symbols !== undefined) {
+          const tokens = symbols.split(",");
+          const dataPackageResponse = await requestDataPackages({
+            dataServiceId:
+              providerToDataServiceId[req.query.provider as string],
+            uniqueSignersCount: 1,
+            dataFeeds: tokens,
+          });
+          return res.json(
+            toMap(
+              tokens
+                .map((token) => dataPackageResponse[token][0])
+                .flatMap((dataPackage) => mapToResponse(dataPackage, provider))
+            )
+          );
+        } else {
+          const dataPackageResponse = await requestDataPackages({
+            dataServiceId:
+              providerToDataServiceId[req.query.provider as string],
+            uniqueSignersCount: 1,
+          });
+          const dataPackage = dataPackageResponse["___ALL_FEEDS___"][0];
+          return res.json(toMap(mapToResponse(dataPackage, provider)));
+        }
+      }
+
       // Getting provider details
       const providerDetails = await getProviderFromParams(params);
       params.provider = providerDetails.address;
