@@ -375,7 +375,7 @@ export const prices = (router: Router) => {
           const dataServiceId = getDataServiceId(req.query.provider as string);
           const symbol = req.query.symbol as string;
           const symbols = req.query.symbols as string;
-          if (symbol !== undefined) {
+          if (symbol !== undefined && symbol !== "") {
             const dataPackageResponse = await requestDataPackages({
               dataServiceId: dataServiceId,
               uniqueSignersCount: 1,
@@ -383,6 +383,8 @@ export const prices = (router: Router) => {
             });
             const dataPackage = dataPackageResponse[symbol][0];
             return res.json(mapFromSdkToResponse(dataPackage, provider));
+          } else if (symbol === "") {
+            return res.json([]);
           } else if (symbols !== undefined) {
             const tokens = symbols.split(",");
             const dataPackages = await fetchDataPackages({
