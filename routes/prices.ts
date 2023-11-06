@@ -342,44 +342,52 @@ export const prices = (router: Router) => {
         !params.limit &&
         shouldRunTestFeature()
       ) {
-        console.log("Running test feature");
-        const provider = await getProviderFromParams(
-          req.query as { provider: string }
-        );
-        const symbol = req.query.symbol as string;
-        const symbols = req.query.symbols as string;
-        if (symbol !== undefined) {
-          const dataPackageResponse = await requestDataPackages({
-            dataServiceId:
-              providerToDataServiceId[req.query.provider as string],
-            uniqueSignersCount: 1,
-            dataFeeds: [symbol],
-          });
-          const dataPackage = dataPackageResponse[symbol][0];
-          return res.json(mapToResponse(dataPackage, provider));
-        } else if (symbols !== undefined) {
-          const tokens = symbols.split(",");
-          const dataPackageResponse = await requestDataPackages({
-            dataServiceId:
-              providerToDataServiceId[req.query.provider as string],
-            uniqueSignersCount: 1,
-            dataFeeds: tokens,
-          });
-          return res.json(
-            toMap(
-              tokens
-                .map((token) => dataPackageResponse[token][0])
-                .flatMap((dataPackage) => mapToResponse(dataPackage, provider))
-            )
+        try {
+          console.log("Running test feature");
+          const provider = await getProviderFromParams(
+            req.query as { provider: string }
           );
-        } else {
-          const dataPackageResponse = await requestDataPackages({
-            dataServiceId:
-              providerToDataServiceId[req.query.provider as string],
-            uniqueSignersCount: 1,
-          });
-          const dataPackage = dataPackageResponse["___ALL_FEEDS___"][0];
-          return res.json(toMap(mapToResponse(dataPackage, provider)));
+          const symbol = req.query.symbol as string;
+          const symbols = req.query.symbols as string;
+          if (symbol !== "") {
+            const dataPackageResponse = await requestDataPackages({
+              dataServiceId:
+                providerToDataServiceId[req.query.provider as string],
+              uniqueSignersCount: 1,
+              dataFeeds: [symbol],
+            });
+            const dataPackage = dataPackageResponse[symbol][0];
+            return res.json(mapToResponse(dataPackage, provider));
+          } else if (symbols !== undefined) {
+            const tokens = symbols.split(",");
+            const dataPackageResponse = await requestDataPackages({
+              dataServiceId:
+                providerToDataServiceId[req.query.provider as string],
+              uniqueSignersCount: 1,
+              dataFeeds: tokens,
+            });
+            return res.json(
+              toMap(
+                tokens
+                  .map((token) => dataPackageResponse[token][0])
+                  .flatMap((dataPackage) =>
+                    mapToResponse(dataPackage, provider)
+                  )
+              )
+            );
+          } else {
+            const dataPackageResponse = await requestDataPackages({
+              dataServiceId:
+                providerToDataServiceId[req.query.provider as string],
+              uniqueSignersCount: 1,
+            });
+            const dataPackage = dataPackageResponse["___ALL_FEEDS___"][0];
+            return res.json(toMap(mapToResponse(dataPackage, provider)));
+          }
+        } catch (e) {
+          console.error(e);
+          console.log(`Failed running test feautre: ${JSON.stringify(params)}`);
+          throw e;
         }
       }
 
