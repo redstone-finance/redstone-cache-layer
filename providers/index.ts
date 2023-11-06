@@ -378,3 +378,25 @@ export const findProviderDetailsByAddress = (address: string) => {
   // throw new Error(`Public key not found for provider address: ${address}`);
   return {};
 };
+
+export const findProviderNameByAddress = (address: string) => {
+  for (const providerName in providers) {
+    const details = providers[providerName];
+    if (
+      details.address === address ||
+      details.evmAddress.toLowerCase() === address.toLowerCase()
+    ) {
+      return providerName;
+    }
+  }
+  return undefined;
+};
+
+export const getDataServiceId = (provider: string) => {
+  const dataServiceIdFromProviderName = providerToDataServiceId[provider];
+  if (dataServiceIdFromProviderName) {
+    return dataServiceIdFromProviderName;
+  } else {
+    return providerToDataServiceId[findProviderNameByAddress(provider)];
+  }
+};

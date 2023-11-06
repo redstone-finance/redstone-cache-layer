@@ -9,13 +9,15 @@ import {
   maxLimitForPrices,
   enableLiteMode,
 } from "../config";
+import { getConfig } from "./configs";
+import { getDataServiceId } from "../providers";
 import { Price, priceToObject } from "../models/price";
 import { logEvent } from "../helpers/amplitude-event-logger";
 import { assertValidSignature } from "../helpers/signature-verifier";
 import { priceParamsToPriceObj, getProviderFromParams } from "../utils";
 import { logger } from "../helpers/logger";
 import { tryCleanCollection } from "../helpers/mongo";
-import { requestDataPackages } from "redstone-sdk";
+import { requestDataPackages, fetchDataPackages } from "@redstone-finance/sdk";
 import { providerToDataServiceId } from "../providers";
 import axios from "axios";
 import csvToJSON from "csv-file-to-json";
@@ -263,7 +265,7 @@ interface QueryParams extends PriceWithParams {
   providerPublicKey?: string;
 }
 
-const mapToResponse = (dataPackage: any, provider: any) => {
+const mapFromSdkToResponse = (dataPackage: any, provider: any) => {
   return dataPackage.dataPackage.dataPoints.map((point: any) => {
     const sourceMetadata = point.toObj().metadata.sourceMetadata;
 
@@ -276,6 +278,28 @@ const mapToResponse = (dataPackage: any, provider: any) => {
       symbol: point.dataFeedId,
       provider: provider.address,
       value: point.toObj().value,
+      source: sourcesFormatted,
+      timestamp: timestamp,
+      providerPublicKey: provider.publicKey,
+      permawebTx: "mock-permaweb-tx",
+      version: "0.3",
+    };
+  });
+};
+
+const mapFromGatewayToResponse = (dataPackage: any, provider: any) => {
+  return dataPackage.dataPoints.map((point: any) => {
+    const sourceMetadata = point.metadata.sourceMetadata;
+
+    let sourcesFormatted = {};
+    for (const [name, value] of Object.entries(sourceMetadata)) {
+      sourcesFormatted[name] = Number((value as any).value);
+    }
+    const timestamp = dataPackage.timestampMilliseconds;
+    return {
+      symbol: point.dataFeedId,
+      provider: provider.address,
+      value: point.value,
       source: sourcesFormatted,
       timestamp: timestamp,
       providerPublicKey: provider.publicKey,
@@ -306,6 +330,7 @@ async function requestInflux(query: string) {
     config
   );
   const json = csvToJSON({ data: result.data });
+  return json;
 }
 
 export const prices = (router: Router) => {
@@ -347,48 +372,55 @@ export const prices = (router: Router) => {
           const provider = await getProviderFromParams(
             req.query as { provider: string }
           );
+          const dataServiceId = getDataServiceId(req.query.provider as string);
           const symbol = req.query.symbol as string;
           const symbols = req.query.symbols as string;
           if (symbol !== undefined) {
             const dataPackageResponse = await requestDataPackages({
-              dataServiceId:
-                providerToDataServiceId[req.query.provider as string],
+              dataServiceId: dataServiceId,
               uniqueSignersCount: 1,
               dataFeeds: [symbol],
             });
             const dataPackage = dataPackageResponse[symbol][0];
-            return res.json(mapToResponse(dataPackage, provider));
+            return res.json(mapFromSdkToResponse(dataPackage, provider));
           } else if (symbols !== undefined) {
             const tokens = symbols.split(",");
-            const dataPackageResponse = await requestDataPackages({
-              dataServiceId:
-                providerToDataServiceId[req.query.provider as string],
-              uniqueSignersCount: 1,
-              dataFeeds: tokens,
+            const dataPackages = await fetchDataPackages({
+              dataServiceId: dataServiceId,
             });
             return res.json(
               toMap(
                 tokens
-                  .map((token) => dataPackageResponse[token][0])
+                  .filter((token) => dataPackages[token] !== undefined)
+                  .map((token) => dataPackages[token][0])
                   .flatMap((dataPackage) =>
-                    mapToResponse(dataPackage, provider)
+                    mapFromGatewayToResponse(dataPackage, provider)
                   )
               )
             );
           } else {
             const dataPackageResponse = await requestDataPackages({
-              dataServiceId:
-                providerToDataServiceId[req.query.provider as string],
+              dataServiceId: dataServiceId,
               uniqueSignersCount: 1,
             });
             const dataPackage = dataPackageResponse["___ALL_FEEDS___"][0];
-            return res.json(toMap(mapToResponse(dataPackage, provider)));
+            return res.json(toMap(mapFromSdkToResponse(dataPackage, provider)));
           }
         } catch (e) {
           console.error(e);
           console.log(`Failed running test feautre: ${JSON.stringify(params)}`);
           throw e;
         }
+      } else if (
+        !params.fromTimestamp &&
+        !params.toTimestamp &&
+        shouldRunTestFeature()
+      ) {
+        // const request = `
+        // `;
+        // const result = await requestInflux(request);
+        // console.log(result);
+        // return res.json(result);
       }
 
       // Getting provider details
