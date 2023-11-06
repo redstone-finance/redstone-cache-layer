@@ -324,6 +324,7 @@ export const providerToDataServiceId = {
   "redstone-rapid": "redstone-rapid-demo",
   redstone: "redstone-main-demo",
   "redstone-stocks": "redstone-stocks-demo",
+  "redstone-avalanche": "redstone-avalanche-demo",
   "redstone-avalanche-node-1": "redstone-avalanche-demo",
   "redstone-avalanche-node-2": "redstone-avalanche-demo",
   "redstone-twaps-1": "redstone-twaps-demo",
