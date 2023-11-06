@@ -325,7 +325,7 @@ async function requestInflux(query: string) {
     },
   };
   const result = await axios.post(
-    `${process.env.INFLUXDB_URL}/api/v2/query?org=redstone`,
+    `${process.env.INFLUXDB_URL}/query?org=redstone`,
     query,
     config
   );
@@ -419,6 +419,13 @@ export const prices = (router: Router) => {
         shouldRunTestFeature()
       ) {
         // const request = `
+        //   from(bucket: "redstone")
+        //   |> range(start: -7d)
+        //   |> filter(fn: (r) => r._measurement == "dataPackages")
+        //   |> filter(fn: (r) => r.dataFeedId == "USDC")
+        //   |> filter(fn: (r) => r.dataServiceId == "chainlink" and r.network == "ethereum")
+        //   |> keep(columns: ["_time", "_value"])
+        //   |> last()
         // `;
         // const result = await requestInflux(request);
         // console.log(result);

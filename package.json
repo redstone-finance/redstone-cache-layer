@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "@amplitude/node": "^1.9.1",
-    "@redstone-finance/sdk": "^0.3.4",
-    "@redstone-finance/utils": "^0.3.4",
+    "@redstone-finance/sdk": "^0.3.5",
+    "@redstone-finance/utils": "^0.3.5",
     "@vendia/serverless-express": "^4.3.9",
     "arweave": "^1.10.14",
     "aws-sdk": "^2.931.0",
