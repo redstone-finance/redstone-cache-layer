@@ -3,7 +3,7 @@ import { Router } from "express";
 // import tokens from "redstone-node/dist/src/config/tokens.json";
 
 const TOKENS_CONFIG_URL =
-  "https://d3cu28sut4ahjk.cloudfront.net/redstone-finance/redstone-monorepo-priv/main/packages/oracle-node/tools/config/predefined-configs/tokens.json";
+  "https://raw.githubusercontent.com/redstone-finance/redstone-app/main/src/config/tokens.json";
 
 export const getConfig = async () => {
   return (await axios.get(TOKENS_CONFIG_URL)).data;

@@ -324,13 +324,17 @@ async function requestInflux(query: string) {
       "Content-Type": "application/vnd.flux",
     },
   };
-  const result = await axios.post(
-    `${process.env.INFLUXDB_URL}/query?org=redstone`,
-    query,
-    config
-  );
-  const json = csvToJSON({ data: result.data });
-  return json;
+  try {
+    const result = await axios.post(
+      `${process.env.INFLUXDB_URL}/api/v2/query?org=redstone`,
+      query,
+      config
+    );
+    const json = csvToJSON({ data: result.data });
+    return json;
+    } catch (error) {
+      console.error(error)
+    }
 }
 
 export const prices = (router: Router) => {
@@ -351,19 +355,17 @@ export const prices = (router: Router) => {
     asyncHandler(async (req, res) => {
       console.log(`Query: ${JSON.stringify(req.query)}`)
       const params = req.query as unknown as QueryParams;
+      const dataServiceId = getDataServiceId(req.query.provider as string);
       getIp(req)
       if (
         !params.fromTimestamp &&
         !params.toTimestamp &&
-        !params.limit &&
-        shouldRunTestFeature()
+        !params.limit
       ) {
         try {
-          console.log("Running test feature");
           const provider = await getProviderFromParams(
             req.query as { provider: string }
           );
-          const dataServiceId = getDataServiceId(req.query.provider as string);
           const symbol = req.query.symbol as string;
           const symbols = req.query.symbols as string;
           if (symbol !== undefined && symbol !== "") {
@@ -435,7 +437,38 @@ export const prices = (router: Router) => {
           "_id" | "__v"
         >[];
         if (params.interval !== undefined) {
-          body = await getPricesInTimeRangeForSingleToken(params);
+          console.log("Executing single token with interval")
+          const start = params.fromTimestamp !== undefined ? `start: ${Math.ceil(params.fromTimestamp / 1000)}` : ""
+          const stop = params.toTimestamp !== undefined ? `stop: ${Math.floor(params.toTimestamp / 1000)}` : ""
+          const range = start !== "" && stop !== "" ? `${start},${stop}` : `${start}${stop}`
+          const request = `
+            from(bucket: "redstone")
+            |> range(${range})
+            |> filter(fn: (r) => r._measurement == "dataPackages")
+            |> filter(fn: (r) => r.dataFeedId == "${params.symbol}")
+            |> filter(fn: (r) => r.dataServiceId == "${dataServiceId}")
+            |> aggregateWindow(every: ${params.interval}ms, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
+          `;
+          //TODO: prevent SQL injection https://docs.influxdata.com/influxdb/cloud/query-data/parameterized-queries/
+          //TODO: try longer periods of times (handle them)
+          //TODO: http://localhost:9000/prices?provider=redstone&symbol=BTC&fromTimestamp=1699194012943&toTimestamp=1699194582943&interval=1
+          //TODO: https://api.redstone.finance/prices?provider=redstone&symbol=BTC&fromTimestamp=1699194012943&toTimestamp=1699194582943&interval=1
+          const results = await requestInflux(request);
+          console.log(results)
+          const mappedResults = results.filter(element => element._field === "value").map(element => {
+            return {
+              symbol: element.dataPointDataFeedId,
+              provider: providerDetails.address,
+              value: element._value,
+              source: "", //TODO: map
+              timestamp: element.timestamp,
+              providerPublicKey: providerDetails.publicKey,
+              permawebTx: "mock-permaweb-tx",
+              version: "0.3",
+            }
+          })
+          return res.json(mappedResults);
         } else if (params.toTimestamp !== undefined) {
           body = await getHistoricalPricesForSingleToken(params);
         } else {
