@@ -349,18 +349,9 @@ export const prices = (router: Router) => {
   router.get(
     "/prices",
     asyncHandler(async (req, res) => {
-      // Request validation
+      console.log(`Query: ${JSON.stringify(req.query)}`)
       const params = req.query as unknown as QueryParams;
-
-      // Saving API read event in amplitude
-      logEvent({
-        eventName: "api-get-request",
-        eventProps: params,
-        ip: getIp(req),
-      });
-      console.log("Getting prices");
-      console.log(`AllParams ${JSON.stringify(params)}`);
-
+      getIp(req)
       if (
         !params.fromTimestamp &&
         !params.toTimestamp &&
