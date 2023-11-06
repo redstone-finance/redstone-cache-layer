@@ -349,7 +349,7 @@ export const prices = (router: Router) => {
           );
           const symbol = req.query.symbol as string;
           const symbols = req.query.symbols as string;
-          if (symbol !== "") {
+          if (symbol !== undefined) {
             const dataPackageResponse = await requestDataPackages({
               dataServiceId:
                 providerToDataServiceId[req.query.provider as string],
