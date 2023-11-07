@@ -438,9 +438,12 @@ export const prices = (router: Router) => {
         >[];
         if (params.interval !== undefined) {
           console.log("Executing single token with interval")
-          const start = params.fromTimestamp !== undefined ? `start: ${Math.ceil(params.fromTimestamp / 1000)}` : ""
+          if (params.fromTimestamp === undefined) {
+            throw new Error(`Param fromTimestamp is required when using interval`)
+          }
+          const start = `start: ${Math.ceil(params.fromTimestamp / 1000)}`
           const stop = params.toTimestamp !== undefined ? `stop: ${Math.floor(params.toTimestamp / 1000)}` : ""
-          const range = start !== "" && stop !== "" ? `${start},${stop}` : `${start}${stop}`
+          const range = stop !== "" ? `${start},${stop}` : `${start}${stop}`
           const request = `
             from(bucket: "redstone")
             |> range(${range})
@@ -451,11 +454,8 @@ export const prices = (router: Router) => {
             |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
           `;
           //TODO: prevent SQL injection https://docs.influxdata.com/influxdb/cloud/query-data/parameterized-queries/
-          //TODO: try longer periods of times (handle them)
-          //TODO: http://localhost:9000/prices?provider=redstone&symbol=BTC&fromTimestamp=1699194012943&toTimestamp=1699194582943&interval=1
-          //TODO: https://api.redstone.finance/prices?provider=redstone&symbol=BTC&fromTimestamp=1699194012943&toTimestamp=1699194582943&interval=1
+          //TODO: add some limit - eg. 7 days time range & combinations of range based on from - to timestamp
           const results = await requestInflux(request);
-          console.log(results)
           const sourceResults = results.filter(element => element._field !== "value" && element._field !== "metadataValue")
           const mappedResults = results.filter(element => element._field === "value" && element._field !== "metadataValue").map(element => {
             const sourceResultsForTimestamp = sourceResults.filter(result => result.timestamp === element.timestamp)
@@ -475,6 +475,7 @@ export const prices = (router: Router) => {
               version: "0.3",
             }
           })
+          console.log("Executed single token with interval")
           return res.json(mappedResults);
         } else if (params.toTimestamp !== undefined) {
           body = await getHistoricalPricesForSingleToken(params);
