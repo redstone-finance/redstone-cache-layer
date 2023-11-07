@@ -22,6 +22,7 @@ import { providerToDataServiceId } from "../providers";
 import axios from "axios";
 import csvToJSON from "csv-file-to-json";
 import { String } from "aws-sdk/clients/cloudsearch";
+import { time } from "console";
 
 export interface PriceWithParams
   extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
@@ -461,7 +462,11 @@ export const prices = (router: Router) => {
             |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
             |> limit(n: ${limit}, offset: ${offset})
           `;
+          //TODO: change dataFeedId to dataPointDataFeedId
+          //TODO: check what happens when we have some data from old mongo & some from new
           //TODO: add some limit - eg. 7 days time range & combinations of range based on from - to timestamp & check whats in current version
+          //TODO: add tests per use case from notepad
+          //TODO: does limit works correctly - if in influx we receive record per value - not per full record
           const results = await requestInflux(request);
           const sourceResults = results.filter(element => element._field !== "value" && element._field !== "metadataValue")
           const mappedResults = results.filter(element => element._field === "value" && element._field !== "metadataValue").map(element => {
@@ -534,10 +539,53 @@ export const prices = (router: Router) => {
         if (params.symbols !== undefined) {
           tokens = params.symbols.split(",");
         }
-        params.tokens = tokens;
 
-        const body = await getPriceForManyTokens(params);
-        return res.json(body);
+        console.log("Executing for many tokens")
+        const stop = params.toTimestamp !== undefined ? Math.floor(params.toTimestamp / 1000) : Math.ceil(Date.now() / 1000)
+        const start = stop - (2 * 60)
+        tokens.forEach(token => validatePareter(token))
+        console.log(`Start: ${start} stop ${stop}, tokens: ${JSON.stringify(tokens)}`)
+          const request = `
+            from(bucket: "redstone")
+            |> range(start: ${start}, stop: ${stop})
+            |> filter(fn: (r) => r._measurement == "dataPackages")
+            |> filter(fn: (r) => r.dataServiceId == "${validatePareter(dataServiceId)}")
+            |> filter(fn: (r) => contains(value: r.dataFeedId, set: ${JSON.stringify(tokens)}))
+            |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
+            |> sort(columns: ["_time"], desc: true)
+          `;
+        const results = await requestInflux(request);
+        const sourceResults = results.filter(element => element._field !== "value" && element._field !== "metadataValue")
+        const response = {}
+        results.filter(element => element._field === "value").forEach(element => {
+          const timestampsForDataFeedId = [...new Set(results.filter(result => result.dataPointDataFeedId == element.dataPointDataFeedId).map(result => result.timestamp))]
+          timestampsForDataFeedId.sort()
+          console.log(element.timestamp)
+          console.log(timestampsForDataFeedId)
+          if (timestampsForDataFeedId[timestampsForDataFeedId.length] === element.timestamp) {
+            const sourceResultsForTimestamp = sourceResults.filter(result => result.timestamp === element.timestamp && result.dataPointDataFeedId === element.dataPointDataFeedId)
+            const source = {}
+            for (let i = 0; i < sourceResultsForTimestamp.length; i++) {
+              const sourceName = sourceResultsForTimestamp[i]._field.replace("value-", "")
+              source[sourceName] = Number(sourceResultsForTimestamp[i]._value)
+            }
+            response[element.dataPointDataFeedId] = {
+              symbol: element.dataPointDataFeedId,
+              provider: providerDetails.address,
+              value: Number(element._value),
+              source: source,
+              timestamp: Number(element.timestamp),
+              providerPublicKey: providerDetails.publicKey,
+              permawebTx: "mock-permaweb-tx",
+              version: "0.3",
+            }
+          }
+          })
+        console.log("Executed for many tokens")
+          return res.json(response);
+
+        // const body = await getPriceForManyTokens(params);
+        // return res.json(body);
       }
     })
   );
