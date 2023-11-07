@@ -21,6 +21,7 @@ import { requestDataPackages, fetchDataPackages } from "@redstone-finance/sdk";
 import { providerToDataServiceId } from "../providers";
 import axios from "axios";
 import csvToJSON from "csv-file-to-json";
+import { String } from "aws-sdk/clients/cloudsearch";
 
 export interface PriceWithParams
   extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
@@ -317,7 +318,15 @@ const toMap = (priceList: any) => {
   return map;
 };
 
-async function requestInflux(query: string) {
+function validatePareter(parameter: string) {
+  const onlyLettersPattern = /^[A-Z a-z.0-9=/_-]+$/;
+  if (!parameter.match(onlyLettersPattern)) {
+    throw new Error(`Invalid parameter: ${parameter}`)
+  }
+  return parameter
+}
+
+async function requestInflux(query: String) {
   const config = {
     headers: {
       Authorization: `Token ${process.env.INFLUXDB_TOKEN}`,
@@ -441,18 +450,19 @@ export const prices = (router: Router) => {
           if (params.fromTimestamp === undefined) {
             throw new Error(`Param fromTimestamp is required when using interval`)
           }
-          const start = `start: ${Math.ceil(params.fromTimestamp / 1000)},`
+        
+          const start = Math.ceil(params.fromTimestamp / 1000)
           const stop = params.toTimestamp !== undefined ? `${Math.floor(params.toTimestamp / 1000)}` : "now()"
           const request = `
             from(bucket: "redstone")
-            |> range(start: ${Math.ceil(params.fromTimestamp / 1000)}, stop: ${stop})
+            |> range(start: ${start}, stop: ${stop})
             |> filter(fn: (r) => r._measurement == "dataPackages")
-            |> filter(fn: (r) => r.dataFeedId == "${params.symbol}")
-            |> filter(fn: (r) => r.dataServiceId == "${dataServiceId}")
+            |> filter(fn: (r) => r.dataFeedId == "${validatePareter(params.symbol)}")
+            |> filter(fn: (r) => r.dataServiceId == "${validatePareter(dataServiceId)}")
             |> aggregateWindow(every: ${params.interval}ms, fn: mean, createEmpty: false)
             |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
           `;
-          //TODO: prevent SQL injection https://docs.influxdata.com/influxdb/cloud/query-data/parameterized-queries/
+          //TODO: add tests
           //TODO: add some limit - eg. 7 days time range & combinations of range based on from - to timestamp
           const results = await requestInflux(request);
           const sourceResults = results.filter(element => element._field !== "value" && element._field !== "metadataValue")
