@@ -478,7 +478,7 @@ export const prices = (router: Router) => {
               provider: providerDetails.address,
               value: Number(element._value),
               source: source,
-              timestamp: element.timestamp,
+              timestamp: Number(element.timestamp),
               providerPublicKey: providerDetails.publicKey,
               permawebTx: "mock-permaweb-tx",
               version: "0.3",
