@@ -453,6 +453,8 @@ export const prices = (router: Router) => {
         
           const start = Math.ceil(params.fromTimestamp / 1000)
           const stop = params.toTimestamp !== undefined ? `${Math.floor(params.toTimestamp / 1000)}` : "now()"
+          const limit = params.limit !== undefined ? params.limit : 100000
+          const offset = params.offset !== undefined ? params.offset : 0
           const request = `
             from(bucket: "redstone")
             |> range(start: ${start}, stop: ${stop})
@@ -461,8 +463,9 @@ export const prices = (router: Router) => {
             |> filter(fn: (r) => r.dataServiceId == "${validatePareter(dataServiceId)}")
             |> aggregateWindow(every: ${params.interval}ms, fn: mean, createEmpty: false)
             |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
+            |> limit(n: ${limit}, offset: ${offset})
           `;
-          //TODO: add some limit - eg. 7 days time range & combinations of range based on from - to timestamp
+          //TODO: add some limit - eg. 7 days time range & combinations of range based on from - to timestamp & check whats in current version
           const results = await requestInflux(request);
           const sourceResults = results.filter(element => element._field !== "value" && element._field !== "metadataValue")
           const mappedResults = results.filter(element => element._field === "value" && element._field !== "metadataValue").map(element => {
@@ -486,7 +489,48 @@ export const prices = (router: Router) => {
           console.log("Executed single token with interval")
           return res.json(mappedResults);
         } else if (params.toTimestamp !== undefined) {
-          body = await getHistoricalPricesForSingleToken(params);
+          console.log("Executing single token with toTimestamp")
+          if (params.fromTimestamp !== undefined && params.limit !== undefined && params.limit > 1000) {
+            throw new Error(`When not passing fromTimestamp max limit can be 1000, is: ${params.limit}`)
+          }
+          const limit = params.limit !== undefined ? params.limit : 1
+          const offset = params.offset !== undefined ? params.offset : 0
+          const stop = params.toTimestamp ? Math.floor(params.toTimestamp / 1000) : Math.ceil(Date.now() / 1000)
+          const start = params.fromTimestamp !== undefined ? Math.ceil(params.fromTimestamp / 1000) : stop - ((limit + offset) * 60)
+          const request = `
+            from(bucket: "redstone")
+            |> range(start: ${start}, stop: ${stop})
+            |> filter(fn: (r) => r._measurement == "dataPackages")
+            |> filter(fn: (r) => r.dataFeedId == "${validatePareter(params.symbol)}")
+            |> filter(fn: (r) => r.dataServiceId == "${validatePareter(dataServiceId)}")
+            |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
+            |> sort(columns: ["_time"], desc: true)
+            |> limit(n: ${limit}, offset: ${offset})
+          `;
+          const results = await requestInflux(request);
+          const sourceResults = results.filter(element => element._field !== "value" && element._field !== "metadataValue")
+          const mappedResults = results.filter(element => element._field === "value" && element._field !== "metadataValue").map(element => {
+            const sourceResultsForTimestamp = sourceResults.filter(result => result.timestamp === element.timestamp)
+            const source = {}
+            for (let i = 0; i < sourceResultsForTimestamp.length;i++) {
+              const sourceName = sourceResultsForTimestamp[i]._field.replace("value-", "")
+              source[sourceName] = Number(sourceResultsForTimestamp[i]._value)
+            }
+            return {
+              symbol: element.dataPointDataFeedId,
+              provider: providerDetails.address,
+              value: Number(element._value),
+              source: source,
+              timestamp: Number(element.timestamp),
+              providerPublicKey: providerDetails.publicKey,
+              permawebTx: "mock-permaweb-tx",
+              version: "0.3",
+            }
+          })
+          console.log("Executed single token with toTimestamp")
+          // return res.json();
+          return res.json(mappedResults);
+          // body = await getHistoricalPricesForSingleToken(params);
         } else {
           body = await getLatestPricesForSingleToken(params);
         }
