@@ -560,9 +560,8 @@ export const prices = (router: Router) => {
         results.filter(element => element._field === "value").forEach(element => {
           const timestampsForDataFeedId = [...new Set(results.filter(result => result.dataPointDataFeedId == element.dataPointDataFeedId).map(result => result.timestamp))]
           timestampsForDataFeedId.sort()
-          console.log(element.timestamp)
-          console.log(timestampsForDataFeedId)
-          if (timestampsForDataFeedId[timestampsForDataFeedId.length] === element.timestamp) {
+          if (Number(timestampsForDataFeedId[timestampsForDataFeedId.length - 1]) === Number(element.timestamp)) {
+            console.log("Filling timestamp")
             const sourceResultsForTimestamp = sourceResults.filter(result => result.timestamp === element.timestamp && result.dataPointDataFeedId === element.dataPointDataFeedId)
             const source = {}
             for (let i = 0; i < sourceResultsForTimestamp.length; i++) {
@@ -583,9 +582,6 @@ export const prices = (router: Router) => {
           })
         console.log("Executed for many tokens")
           return res.json(response);
-
-        // const body = await getPriceForManyTokens(params);
-        // return res.json(body);
       }
     })
   );
