@@ -462,7 +462,6 @@ export const prices = (router: Router) => {
             |> aggregateWindow(every: ${params.interval}ms, fn: mean, createEmpty: false)
             |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
           `;
-          //TODO: add tests
           //TODO: add some limit - eg. 7 days time range & combinations of range based on from - to timestamp
           const results = await requestInflux(request);
           const sourceResults = results.filter(element => element._field !== "value" && element._field !== "metadataValue")
