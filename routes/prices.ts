@@ -441,12 +441,11 @@ export const prices = (router: Router) => {
           if (params.fromTimestamp === undefined) {
             throw new Error(`Param fromTimestamp is required when using interval`)
           }
-          const start = `start: ${Math.ceil(params.fromTimestamp / 1000)}`
-          const stop = params.toTimestamp !== undefined ? `stop: ${Math.floor(params.toTimestamp / 1000)}` : ""
-          const range = stop !== "" ? `${start},${stop}` : `${start}${stop}`
+          const start = `start: ${Math.ceil(params.fromTimestamp / 1000)},`
+          const stop = params.toTimestamp !== undefined ? `${Math.floor(params.toTimestamp / 1000)}` : "now()"
           const request = `
             from(bucket: "redstone")
-            |> range(${range})
+            |> range(start: ${Math.ceil(params.fromTimestamp / 1000)}, stop: ${stop})
             |> filter(fn: (r) => r._measurement == "dataPackages")
             |> filter(fn: (r) => r.dataFeedId == "${params.symbol}")
             |> filter(fn: (r) => r.dataServiceId == "${dataServiceId}")
