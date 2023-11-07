@@ -441,10 +441,6 @@ export const prices = (router: Router) => {
 
       // If query params contain "symbol" we fetch price for this symbol
       if (params.symbol !== undefined) {
-        let body: _.Omit<
-          Document<unknown, any, Price> & Price & { providerPublicKey: any },
-          "_id" | "__v"
-        >[];
         if (params.interval !== undefined) {
           console.log("Executing single token with interval")
           if (params.fromTimestamp === undefined) {
@@ -471,7 +467,7 @@ export const prices = (router: Router) => {
           const mappedResults = results.filter(element => element._field === "value" && element._field !== "metadataValue").map(element => {
             const sourceResultsForTimestamp = sourceResults.filter(result => result.timestamp === element.timestamp)
             const source = {}
-            for (let i = 0; i < sourceResultsForTimestamp.length;i++) {
+            for (let i = 0; i < sourceResultsForTimestamp.length; i++) {
               const sourceName = sourceResultsForTimestamp[i]._field.replace("value-", "")
               source[sourceName] = Number(sourceResultsForTimestamp[i]._value)
             }
@@ -488,15 +484,17 @@ export const prices = (router: Router) => {
           })
           console.log("Executed single token with interval")
           return res.json(mappedResults);
-        } else if (params.toTimestamp !== undefined) {
+        } else {
           console.log("Executing single token with toTimestamp")
-          if (params.fromTimestamp !== undefined && params.limit !== undefined && params.limit > 1000) {
-            throw new Error(`When not passing fromTimestamp max limit can be 1000, is: ${params.limit}`)
+          const limit = params.limit !== undefined ? Number(params.limit) : 1
+          const offset = params.offset !== undefined ? Number(params.offset) : 0
+          if (params.fromTimestamp !== undefined && limit + offset > 1000) {
+            throw new Error(`When not passing fromTimestamp limit + offset can't be more than 1000, is: ${limit} + ${offset}`)
           }
-          const limit = params.limit !== undefined ? params.limit : 1
-          const offset = params.offset !== undefined ? params.offset : 0
           const stop = params.toTimestamp ? Math.floor(params.toTimestamp / 1000) : Math.ceil(Date.now() / 1000)
-          const start = params.fromTimestamp !== undefined ? Math.ceil(params.fromTimestamp / 1000) : stop - ((limit + offset) * 60)
+          const searchWindow = Math.max(limit + offset, 3)
+          const start = params.fromTimestamp !== undefined ? Math.ceil(params.fromTimestamp / 1000) : stop - (searchWindow * 60)
+          console.log(`limit: ${limit}, offset: ${offset} Start: ${start}, stop: ${stop}`)
           const request = `
             from(bucket: "redstone")
             |> range(start: ${start}, stop: ${stop})
@@ -512,7 +510,7 @@ export const prices = (router: Router) => {
           const mappedResults = results.filter(element => element._field === "value" && element._field !== "metadataValue").map(element => {
             const sourceResultsForTimestamp = sourceResults.filter(result => result.timestamp === element.timestamp)
             const source = {}
-            for (let i = 0; i < sourceResultsForTimestamp.length;i++) {
+            for (let i = 0; i < sourceResultsForTimestamp.length; i++) {
               const sourceName = sourceResultsForTimestamp[i]._field.replace("value-", "")
               source[sourceName] = Number(sourceResultsForTimestamp[i]._value)
             }
@@ -528,15 +526,9 @@ export const prices = (router: Router) => {
             }
           })
           console.log("Executed single token with toTimestamp")
-          // return res.json();
           return res.json(mappedResults);
-          // body = await getHistoricalPricesForSingleToken(params);
-        } else {
-          body = await getLatestPricesForSingleToken(params);
         }
-        return res.json(body);
       }
-      // Otherwise we fetch prices for many symbols
       else {
         let tokens = [];
         if (params.symbols !== undefined) {
