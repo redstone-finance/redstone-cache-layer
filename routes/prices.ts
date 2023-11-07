@@ -456,12 +456,19 @@ export const prices = (router: Router) => {
           //TODO: https://api.redstone.finance/prices?provider=redstone&symbol=BTC&fromTimestamp=1699194012943&toTimestamp=1699194582943&interval=1
           const results = await requestInflux(request);
           console.log(results)
-          const mappedResults = results.filter(element => element._field === "value").map(element => {
+          const sourceResults = results.filter(element => element._field !== "value" && element._field !== "metadataValue")
+          const mappedResults = results.filter(element => element._field === "value" && element._field !== "metadataValue").map(element => {
+            const sourceResultsForTimestamp = sourceResults.filter(result => result.timestamp === element.timestamp)
+            const source = {}
+            for (let i = 0; i < sourceResultsForTimestamp.length;i++) {
+              const sourceName = sourceResultsForTimestamp[i]._field.replace("value-", "")
+              source[sourceName] = Number(sourceResultsForTimestamp[i]._value)
+            }
             return {
               symbol: element.dataPointDataFeedId,
               provider: providerDetails.address,
-              value: element._value,
-              source: "", //TODO: map
+              value: Number(element._value),
+              source: source,
               timestamp: element.timestamp,
               providerPublicKey: providerDetails.publicKey,
               permawebTx: "mock-permaweb-tx",
