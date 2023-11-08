@@ -453,10 +453,6 @@ export const prices = (router: Router) => {
             |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
             |> limit(n: ${limit}, offset: ${offset})
           `;
-          //TODO: check what happens when we have some data from old mongo & some from new
-          //TODO: add some limit - eg. 7 days time range & combinations of range based on from - to timestamp & check whats in current version
-          //TODO: add tests per use case from notepad
-          //TODO: does limit works correctly - if in influx we receive record per value - not per full record
           const results = await requestInflux(request);
           const sourceResults = results.filter(element => element._field !== "value" && element._field !== "metadataValue")
           const valueResults = results.filter(element => element._field === "value" && element._field !== "metadataValue")
