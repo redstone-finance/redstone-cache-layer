@@ -462,7 +462,6 @@ export const prices = (router: Router) => {
             |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
             |> limit(n: ${limit}, offset: ${offset})
           `;
-          //TODO: change dataFeedId to dataPointDataFeedId
           //TODO: check what happens when we have some data from old mongo & some from new
           //TODO: add some limit - eg. 7 days time range & combinations of range based on from - to timestamp & check whats in current version
           //TODO: add tests per use case from notepad
@@ -477,7 +476,7 @@ export const prices = (router: Router) => {
               source[sourceName] = Number(sourceResultsForTimestamp[i]._value)
             }
             return {
-              symbol: element.dataPointDataFeedId,
+              symbol: element.dataFeedId,
               provider: providerDetails.address,
               value: Number(element._value),
               source: source,
@@ -520,7 +519,7 @@ export const prices = (router: Router) => {
               source[sourceName] = Number(sourceResultsForTimestamp[i]._value)
             }
             return {
-              symbol: element.dataPointDataFeedId,
+              symbol: element.dataFeedId,
               provider: providerDetails.address,
               value: Number(element._value),
               source: source,
@@ -558,18 +557,18 @@ export const prices = (router: Router) => {
         const sourceResults = results.filter(element => element._field !== "value" && element._field !== "metadataValue")
         const response = {}
         results.filter(element => element._field === "value").forEach(element => {
-          const timestampsForDataFeedId = [...new Set(results.filter(result => result.dataPointDataFeedId == element.dataPointDataFeedId).map(result => result.timestamp))]
+          const timestampsForDataFeedId = [...new Set(results.filter(result => result.dataFeedId == element.dataFeedId).map(result => result.timestamp))]
           timestampsForDataFeedId.sort()
           if (Number(timestampsForDataFeedId[timestampsForDataFeedId.length - 1]) === Number(element.timestamp)) {
             console.log("Filling timestamp")
-            const sourceResultsForTimestamp = sourceResults.filter(result => result.timestamp === element.timestamp && result.dataPointDataFeedId === element.dataPointDataFeedId)
+            const sourceResultsForTimestamp = sourceResults.filter(result => result.timestamp === element.timestamp && result.dataFeedId === element.dataFeedId)
             const source = {}
             for (let i = 0; i < sourceResultsForTimestamp.length; i++) {
               const sourceName = sourceResultsForTimestamp[i]._field.replace("value-", "")
               source[sourceName] = Number(sourceResultsForTimestamp[i]._value)
             }
-            response[element.dataPointDataFeedId] = {
-              symbol: element.dataPointDataFeedId,
+            response[element.dataFeedId] = {
+              symbol: element.dataFeedId,
               provider: providerDetails.address,
               value: Number(element._value),
               source: source,
