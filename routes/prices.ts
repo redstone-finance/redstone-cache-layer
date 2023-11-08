@@ -344,6 +344,7 @@ async function requestInflux(query: String) {
     return json;
     } catch (error) {
       console.error(error)
+      throw new Error("Request failed")
     }
 }
 
@@ -421,18 +422,7 @@ export const prices = (router: Router) => {
         !params.toTimestamp &&
         shouldRunTestFeature()
       ) {
-        // const request = `
-        //   from(bucket: "redstone")
-        //   |> range(start: -7d)
-        //   |> filter(fn: (r) => r._measurement == "dataPackages")
-        //   |> filter(fn: (r) => r.dataFeedId == "USDC")
-        //   |> filter(fn: (r) => r.dataServiceId == "chainlink" and r.network == "ethereum")
-        //   |> keep(columns: ["_time", "_value"])
-        //   |> last()
-        // `;
-        // const result = await requestInflux(request);
-        // console.log(result);
-        // return res.json(result);
+
       }
 
       // Getting provider details
@@ -458,6 +448,7 @@ export const prices = (router: Router) => {
             |> filter(fn: (r) => r._measurement == "dataPackages")
             |> filter(fn: (r) => r.dataFeedId == "${validatePareter(params.symbol)}")
             |> filter(fn: (r) => r.dataServiceId == "${validatePareter(dataServiceId)}")
+            |> keep(columns: ["_time", "_value", "_field", "dataFeedId", "dataServiceId"])
             |> aggregateWindow(every: ${params.interval}ms, fn: mean, createEmpty: false)
             |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
             |> limit(n: ${limit}, offset: ${offset})
@@ -468,7 +459,8 @@ export const prices = (router: Router) => {
           //TODO: does limit works correctly - if in influx we receive record per value - not per full record
           const results = await requestInflux(request);
           const sourceResults = results.filter(element => element._field !== "value" && element._field !== "metadataValue")
-          const mappedResults = results.filter(element => element._field === "value" && element._field !== "metadataValue").map(element => {
+          const valueResults = results.filter(element => element._field === "value" && element._field !== "metadataValue")
+          const mappedResults = valueResults.map(element => {
             const sourceResultsForTimestamp = sourceResults.filter(result => result.timestamp === element.timestamp)
             const source = {}
             for (let i = 0; i < sourceResultsForTimestamp.length; i++) {
@@ -505,6 +497,7 @@ export const prices = (router: Router) => {
             |> filter(fn: (r) => r._measurement == "dataPackages")
             |> filter(fn: (r) => r.dataFeedId == "${validatePareter(params.symbol)}")
             |> filter(fn: (r) => r.dataServiceId == "${validatePareter(dataServiceId)}")
+            |> keep(columns: ["_time", "_value", "_field", "dataFeedId", "dataServiceId"])
             |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
             |> sort(columns: ["_time"], desc: true)
             |> limit(n: ${limit}, offset: ${offset})
@@ -550,6 +543,7 @@ export const prices = (router: Router) => {
             |> filter(fn: (r) => r._measurement == "dataPackages")
             |> filter(fn: (r) => r.dataServiceId == "${validatePareter(dataServiceId)}")
             |> filter(fn: (r) => contains(value: r.dataFeedId, set: ${JSON.stringify(tokens)}))
+            |> keep(columns: ["_time", "_value", "_field", "dataFeedId", "dataServiceId"])
             |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
             |> sort(columns: ["_time"], desc: true)
           `;
