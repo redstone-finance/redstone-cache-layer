@@ -354,11 +354,8 @@ export const prices = (router: Router) => {
    * It is used in redstone-api
    */
 
-  function shouldRunTestFeature() {
-    return (
-      Math.floor(Math.random() * 100) <
-      Number(process.env.PERCENT_OF_TEST_FEATURES)
-    );
+  function shouldRunTestFeature(percentOfTestFeatureEnv) {
+    return Math.floor(Math.random() * 100) < Number(percentOfTestFeatureEnv);
   }
 
   async function handleByOracleGateway(req, res, dataServiceId, params) {
@@ -662,27 +659,44 @@ export const prices = (router: Router) => {
       // If query params contain "symbol" we fetch price for this symbol
       if (params.symbol !== undefined) {
         if (params.interval !== undefined) {
-          return handleByInfluxWithSymbolAndInterval(
-            res,
-            params,
-            dataServiceId,
-            providerDetails
-          );
+          return res.json(await getPricesInTimeRangeForSingleToken(params));
+          // return handleByInfluxWithSymbolAndInterval(
+          //   res,
+          //   params,
+          //   dataServiceId,
+          //   providerDetails
+          // );
+        } else if (params.toTimestamp !== undefined) {
+          return res.json(await getHistoricalPricesForSingleToken(params));
+          // return handleByInfluxWithSymbolAndNoInterval(
+          //   res,
+          //   params,
+          //   providerDetails,
+          //   dataServiceId
+          // );
         } else {
-          return handleByInfluxWithSymbolAndNoInterval(
-            res,
-            params,
-            providerDetails,
-            dataServiceId
-          );
+          return res.json(await getLatestPricesForSingleToken(params));
+          // return handleByInfluxWithSymbolAndNoInterval(
+          //   res,
+          //   params,
+          //   providerDetails,
+          //   dataServiceId
+          // );
         }
       } else {
-        return handleByInfluxWithManyTokens(
-          res,
-          params,
-          dataServiceId,
-          providerDetails
-        );
+        let tokens = [];
+        if (params.symbols !== undefined) {
+          tokens = params.symbols.split(",");
+        }
+        params.tokens = tokens;
+
+        return res.json(await getPriceForManyTokens(params));
+        // return handleByInfluxWithManyTokens(
+        //   res,
+        //   params,
+        //   dataServiceId,
+        //   providerDetails
+        // );
       }
     })
   );
