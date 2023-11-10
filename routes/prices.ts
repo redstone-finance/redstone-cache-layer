@@ -512,9 +512,9 @@ export const prices = (router: Router) => {
               dataServiceId
             )}")
             |> keep(columns: ["_time", "_value", "_field", "dataFeedId", "dataServiceId"])
-            |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
             |> sort(columns: ["_time"], desc: true)
             |> limit(n: ${limit}, offset: ${offset})
+            |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 })) 
           `;
     const results = await requestInflux(request);
     const sourceResults = results.filter(
