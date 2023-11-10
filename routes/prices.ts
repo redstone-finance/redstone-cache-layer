@@ -659,44 +659,77 @@ export const prices = (router: Router) => {
       // If query params contain "symbol" we fetch price for this symbol
       if (params.symbol !== undefined) {
         if (params.interval !== undefined) {
+          if (shouldRunTestFeature(process.env.TEST_SYMBOL_INTERVAL_PERCENT)) {
+            console.log(
+              `Running TEST_SYMBOL_INTERVAL_PERCENT: ${JSON.stringify(
+                req.query
+              )}`
+            );
+            return handleByInfluxWithSymbolAndInterval(
+              res,
+              params,
+              dataServiceId,
+              providerDetails
+            );
+          }
           return res.json(await getPricesInTimeRangeForSingleToken(params));
-          // return handleByInfluxWithSymbolAndInterval(
-          //   res,
-          //   params,
-          //   dataServiceId,
-          //   providerDetails
-          // );
         } else if (params.toTimestamp !== undefined) {
-          return res.json(await getHistoricalPricesForSingleToken(params));
-          // return handleByInfluxWithSymbolAndNoInterval(
-          //   res,
-          //   params,
-          //   providerDetails,
-          //   dataServiceId
-          // );
+          if (
+            shouldRunTestFeature(process.env.TEST_SYMBOL_NO_INTERVAL_PERCENT)
+          ) {
+            console.log(
+              `Running TEST_SYMBOL_NO_INTERVAL_PERCENT: ${JSON.stringify(
+                req.query
+              )}`
+            );
+            return handleByInfluxWithSymbolAndNoInterval(
+              res,
+              params,
+              providerDetails,
+              dataServiceId
+            );
+          } else {
+            return res.json(await getHistoricalPricesForSingleToken(params));
+          }
         } else {
-          return res.json(await getLatestPricesForSingleToken(params));
-          // return handleByInfluxWithSymbolAndNoInterval(
-          //   res,
-          //   params,
-          //   providerDetails,
-          //   dataServiceId
-          // );
+          if (
+            shouldRunTestFeature(process.env.TEST_SYMBOL_NO_INTERVAL_PERCENT)
+          ) {
+            console.log(
+              `Running TEST_SYMBOL_NO_INTERVAL_PERCENT: ${JSON.stringify(
+                req.query
+              )}`
+            );
+            return handleByInfluxWithSymbolAndNoInterval(
+              res,
+              params,
+              providerDetails,
+              dataServiceId
+            );
+          } else {
+            return res.json(await getLatestPricesForSingleToken(params));
+          }
         }
       } else {
-        let tokens = [];
-        if (params.symbols !== undefined) {
-          tokens = params.symbols.split(",");
-        }
-        params.tokens = tokens;
+        if (shouldRunTestFeature(process.env.TEST_MANY_SYMBOLS_PERCENT)) {
+          console.log(
+            `Running TEST_MANY_SYMBOLS_PERCENT: ${JSON.stringify(req.query)}`
+          );
+          return handleByInfluxWithManyTokens(
+            res,
+            params,
+            dataServiceId,
+            providerDetails
+          );
+        } else {
+          let tokens = [];
+          if (params.symbols !== undefined) {
+            tokens = params.symbols.split(",");
+          }
+          params.tokens = tokens;
 
-        return res.json(await getPriceForManyTokens(params));
-        // return handleByInfluxWithManyTokens(
-        //   res,
-        //   params,
-        //   dataServiceId,
-        //   providerDetails
-        // );
+          return res.json(await getPriceForManyTokens(params));
+        }
       }
     })
   );
