@@ -412,15 +412,17 @@ export const prices = (router: Router) => {
     providerDetails
   ) {
     console.log("Executing single token with interval");
-    if (params.fromTimestamp === undefined) {
-      throw new Error(`Param fromTimestamp is required when using interval`);
+    if (
+      params.fromTimestamp === undefined ||
+      params.toTimestamp === undefined
+    ) {
+      throw new Error(
+        `Param fromTimestamp and toTimestamp are required when using interval`
+      );
     }
 
     const start = Math.ceil((params.fromTimestamp - params.interval) / 1000);
-    const stop =
-      params.toTimestamp !== undefined
-        ? `${Math.floor(params.toTimestamp / 1000)}`
-        : "now()";
+    const stop = Math.floor(params.toTimestamp / 1000);
     const limit = params.limit !== undefined ? params.limit : 100000;
     const offset = params.offset !== undefined ? params.offset : 0;
     const request = `
