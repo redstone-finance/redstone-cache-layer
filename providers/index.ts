@@ -321,6 +321,17 @@ const providers = {
 };
 
 export const providerToDataServiceId = {
+  "redstone-rapid-demo": "redstone-rapid-demo",
+  "redstone-main-demo": "redstone-main-demo",
+  "redstone-stocks-demo": "redstone-stocks-demo",
+  "redstone-avalanche-demo": "redstone-avalanche-demo",
+  "redstone-twaps-demo": "redstone-twaps-demo",
+  "redstone-arbitrum-prod": "redstone-arbitrum-prod",
+  "redstone-custom-urls-demo": "redstone-custom-urls-demo",
+  "redstone-arbitrum-demo": "redstone-arbitrum-demo",
+  "redstone-avalanche-prod": "redstone-avalanche-prod",
+  "redstone-primary-demo": "redstone-primary-demo",
+  "redstone-primary-prod": "redstone-primary-prod",
   "redstone-rapid": "redstone-rapid-demo",
   redstone: "redstone-main-demo",
   "redstone-stocks": "redstone-stocks-demo",
