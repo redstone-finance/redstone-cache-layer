@@ -675,10 +675,12 @@ export const prices = (router: Router) => {
           return res.json(await getPricesInTimeRangeForSingleToken(params));
         } else if (params.toTimestamp !== undefined) {
           if (
-            shouldRunTestFeature(process.env.TEST_SYMBOL_NO_INTERVAL_PERCENT)
+            shouldRunTestFeature(
+              process.env.TEST_SYMBOL_NO_INTERVAL_TO_TIMESTAMP_PERCENT
+            )
           ) {
             console.log(
-              `Running TEST_SYMBOL_NO_INTERVAL_PERCENT: ${JSON.stringify(
+              `Running TEST_SYMBOL_NO_INTERVAL_TO_TIMESTAMP_PERCENT: ${JSON.stringify(
                 req.query
               )}`
             );
@@ -693,10 +695,12 @@ export const prices = (router: Router) => {
           }
         } else {
           if (
-            shouldRunTestFeature(process.env.TEST_SYMBOL_NO_INTERVAL_PERCENT)
+            shouldRunTestFeature(
+              process.env.TEST_SYMBOL_NO_INTERVAL_NO_TO_TIMESTAMP_PERCENT
+            )
           ) {
             console.log(
-              `Running TEST_SYMBOL_NO_INTERVAL_PERCENT: ${JSON.stringify(
+              `Running TEST_SYMBOL_NO_INTERVAL_NO_TO_TIMESTAMP_PERCENT: ${JSON.stringify(
                 req.query
               )}`
             );
