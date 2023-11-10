@@ -416,7 +416,7 @@ export const prices = (router: Router) => {
       throw new Error(`Param fromTimestamp is required when using interval`);
     }
 
-    const start = Math.ceil(params.fromTimestamp / 1000);
+    const start = Math.ceil((params.fromTimestamp - params.interval) / 1000);
     const stop =
       params.toTimestamp !== undefined
         ? `${Math.floor(params.toTimestamp / 1000)}`
