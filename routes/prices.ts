@@ -355,7 +355,11 @@ export const prices = (router: Router) => {
    */
 
   function shouldRunTestFeature(percentOfTestFeatureEnv) {
-    return Math.floor(Math.random() * 100) < Number(percentOfTestFeatureEnv);
+    if (percentOfTestFeatureEnv) {
+      return Math.floor(Math.random() * 100) < Number(percentOfTestFeatureEnv);
+    } else {
+      return false;
+    }
   }
 
   async function handleByOracleGateway(req, res, dataServiceId, params) {
