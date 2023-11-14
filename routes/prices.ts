@@ -646,6 +646,47 @@ export const prices = (router: Router) => {
     return res.json(response);
   }
 
+  function getDateTimeString(timestamp) {
+    const date = new Date(timestamp).toLocaleDateString("pl-PL");
+    const time = new Date(timestamp).toLocaleTimeString("pl-PL");
+    return `${date} ${time}`;
+  }
+
+  function isOldDataRequest(params) {
+    const now = Date.now();
+    const days30Ago = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    console.log(
+      `DEBUG ${params.fromTimestamp} ${days30Ago} ${params.fromTimestamp}`
+    );
+    if (params.fromTimestamp && days30Ago > Number(params.fromTimestamp)) {
+      console.log(
+        `isOldDataRequest with fromTimestamp: ${getDateTimeString(
+          days30Ago
+        )} > ${getDateTimeString(Number(params.fromTimestamp))}`
+      );
+      return true;
+    } else {
+      const toTimestamp = params.toTimestamp
+        ? Number(params.toTimestamp)
+        : Date.now();
+      const limit = params.limit !== undefined ? Number(params.limit) : 1;
+      const offset = params.offset !== undefined ? Number(params.offset) : 0;
+      const goBackInTime = (limit + offset) * 60 * 1000;
+      const fromTimestamp = toTimestamp - goBackInTime;
+      const result = days30Ago > fromTimestamp;
+      console.log(
+        `isOldDataRequest no from result: ${result} toTimestamp: ${getDateTimeString(
+          toTimestamp
+        )} limit: ${params.limit} offset: ${
+          params.offset
+        } goBackInTime: ${goBackInTime} fromTimestamp: ${getDateTimeString(
+          fromTimestamp
+        )}`
+      );
+      return result;
+    }
+  }
+
   router.get(
     "/prices",
     asyncHandler(async (req, res) => {
@@ -665,7 +706,10 @@ export const prices = (router: Router) => {
       // If query params contain "symbol" we fetch price for this symbol
       if (params.symbol !== undefined) {
         if (params.interval !== undefined) {
-          if (shouldRunTestFeature(process.env.TEST_SYMBOL_INTERVAL_PERCENT)) {
+          if (
+            shouldRunTestFeature(process.env.TEST_SYMBOL_INTERVAL_PERCENT) &&
+            isOldDataRequest(params)
+          ) {
             console.log(
               `Running TEST_SYMBOL_INTERVAL_PERCENT: ${JSON.stringify(
                 req.query
@@ -683,7 +727,8 @@ export const prices = (router: Router) => {
           if (
             shouldRunTestFeature(
               process.env.TEST_SYMBOL_NO_INTERVAL_TO_TIMESTAMP_PERCENT
-            )
+            ) &&
+            isOldDataRequest(params)
           ) {
             console.log(
               `Running TEST_SYMBOL_NO_INTERVAL_TO_TIMESTAMP_PERCENT: ${JSON.stringify(
@@ -703,7 +748,8 @@ export const prices = (router: Router) => {
           if (
             shouldRunTestFeature(
               process.env.TEST_SYMBOL_NO_INTERVAL_NO_TO_TIMESTAMP_PERCENT
-            )
+            ) &&
+            isOldDataRequest(params)
           ) {
             console.log(
               `Running TEST_SYMBOL_NO_INTERVAL_NO_TO_TIMESTAMP_PERCENT: ${JSON.stringify(
@@ -721,7 +767,10 @@ export const prices = (router: Router) => {
           }
         }
       } else {
-        if (shouldRunTestFeature(process.env.TEST_MANY_SYMBOLS_PERCENT)) {
+        if (
+          shouldRunTestFeature(process.env.TEST_MANY_SYMBOLS_PERCENT) &&
+          isOldDataRequest(params)
+        ) {
           console.log(
             `Running TEST_MANY_SYMBOLS_PERCENT: ${JSON.stringify(req.query)}`
           );
