@@ -4,9 +4,10 @@ import { Package } from "../models/package";
 import { Price } from "../models/price";
 import { getProviderFromParams } from "../utils";
 import { tryCleanCollection } from "../helpers/mongo";
-import { enableLiteMode, cacheTTLMilliseconds } from "../config";
+import { enableLiteMode, cacheTTLMilliseconds, } from "../config";
 import { Router } from "express";
 import { Document } from "mongoose";
+import {throwExpiredApiError} from "./configs"
 
 const dbItemToObj = (item: Document<unknown, any, Package> & Package) => {
   return _.omit(item.toObject(), ["_id", "__v"]);
@@ -94,8 +95,8 @@ export const packages = (router: Router) => {
   router.get(
     "/packages/latest",
     asyncHandler(async (req, res) => {
-      const initialMongoQuery = {};
-      return await findPackage(req, res, initialMongoQuery);
+      console.log("Getting latest packages")
+      throwExpiredApiError()
     })
   );
 
@@ -106,14 +107,8 @@ export const packages = (router: Router) => {
   router.get(
     "/packages",
     asyncHandler(async (req, res) => {
-      if (!req.query.toTimestamp) {
-        throw new Error("toTimestamp query param is required");
-      }
-
-      const initialMongoQuery = {
-        timestamp: { $lte: req.query.toTimestamp },
-      };
-      return await findPackage(req, res, initialMongoQuery);
+      console.log("Getting packages by timestamp")
+      throwExpiredApiError()
     })
   );
 };

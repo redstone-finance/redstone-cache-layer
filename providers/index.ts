@@ -320,6 +320,48 @@ const providers = {
   },
 };
 
+export const providerToDataServiceId = {
+  "redstone-rapid-demo": "redstone-rapid-demo",
+  "redstone-main-demo": "redstone-main-demo",
+  "redstone-stocks-demo": "redstone-stocks-demo",
+  "redstone-avalanche-demo": "redstone-avalanche-demo",
+  "redstone-twaps-demo": "redstone-twaps-demo",
+  "redstone-arbitrum-prod": "redstone-arbitrum-prod",
+  "redstone-custom-urls-demo": "redstone-custom-urls-demo",
+  "redstone-arbitrum-demo": "redstone-arbitrum-demo",
+  "redstone-avalanche-prod": "redstone-avalanche-prod",
+  "redstone-primary-demo": "redstone-primary-demo",
+  "redstone-primary-prod": "redstone-primary-prod",
+  "redstone-rapid": "redstone-rapid-demo",
+  redstone: "redstone-main-demo",
+  "redstone-stocks": "redstone-stocks-demo",
+  "redstone-avalanche": "redstone-avalanche-demo",
+  "redstone-avalanche-node-1": "redstone-avalanche-demo",
+  "redstone-avalanche-node-2": "redstone-avalanche-demo",
+  "redstone-twaps-1": "redstone-twaps-demo",
+  "redstone-custom-urls-1": "redstone-custom-urls-demo",
+  "redstone-custom-urls-2": "redstone-custom-urls-demo",
+  "redstone-arbitrum-dev-node-1": "redstone-arbitrum-demo",
+  "redstone-arbitrum-dev-node-2": "redstone-arbitrum-demo",
+  "redstone-avalanche-prod-node-1": "redstone-avalanche-prod",
+  "redstone-avalanche-prod-node-2": "redstone-avalanche-prod",
+  "redstone-avalanche-prod-node-3": "redstone-avalanche-prod",
+  "redstone-avalanche-prod-node-4": "redstone-avalanche-prod",
+  "redstone-avalanche-prod-node-5": "redstone-avalanche-prod",
+  "redstone-primary-demo-node-1": "redstone-primary-demo",
+  "redstone-primary-demo-node-2": "redstone-primary-demo",
+  "redstone-primary-prod-node-1": "redstone-primary-prod",
+  "redstone-primary-prod-node-2": "redstone-primary-prod",
+  "redstone-primary-prod-node-3": "redstone-primary-prod",
+  "redstone-primary-prod-node-4": "redstone-primary-prod",
+  "redstone-primary-prod-node-5": "redstone-primary-prod",
+  "redstone-arbitrum-prod-node-1": "redstone-arbitrum-prod",
+  "redstone-arbitrum-prod-node-2": "redstone-arbitrum-prod",
+  "redstone-arbitrum-prod-node-3": "redstone-arbitrum-prod",
+  "redstone-arbitrum-prod-node-4": "redstone-arbitrum-prod",
+  "redstone-arbitrum-prod-node-5": "redstone-arbitrum-prod",
+};
+
 export const getProviders = () => {
   return providers;
 };
@@ -347,4 +389,26 @@ export const findProviderDetailsByAddress = (address: string) => {
   // TODO: maybe uncomment
   // throw new Error(`Public key not found for provider address: ${address}`);
   return {};
+};
+
+export const findProviderNameByAddress = (address: string) => {
+  for (const providerName in providers) {
+    const details = providers[providerName];
+    if (
+      details.address === address ||
+      details.evmAddress.toLowerCase() === address.toLowerCase()
+    ) {
+      return providerName;
+    }
+  }
+  return undefined;
+};
+
+export const getDataServiceId = (provider: string) => {
+  const dataServiceIdFromProviderName = providerToDataServiceId[provider];
+  if (dataServiceIdFromProviderName) {
+    return dataServiceIdFromProviderName;
+  } else {
+    return providerToDataServiceId[findProviderNameByAddress(provider)];
+  }
 };
