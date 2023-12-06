@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "run-ts": "ts-node",
     "start": "ts-node -e 'require(\"./index\").runLocalServer()'",
     "dev": "MODE=LOCAL node -e 'require(\"./index\").runLocalServer()'",
     "test": "jest --coverage",
