@@ -96,7 +96,8 @@ export const packages = (router: Router) => {
     "/packages/latest",
     asyncHandler(async (req, res) => {
       console.log("Getting latest packages")
-      throwExpiredApiError()
+      const initialMongoQuery = {};
+      return await findPackage(req, res, initialMongoQuery);
     })
   );
 
@@ -108,7 +109,14 @@ export const packages = (router: Router) => {
     "/packages",
     asyncHandler(async (req, res) => {
       console.log("Getting packages by timestamp")
-      throwExpiredApiError()
+      if (!req.query.toTimestamp) {
+        throw new Error("toTimestamp query param is required");
+      }
+
+      const initialMongoQuery = {
+        timestamp: { $lte: req.query.toTimestamp },
+      };
+      return await findPackage(req, res, initialMongoQuery);
     })
   );
 };
