@@ -9,7 +9,7 @@ export const errors = (router: Router) => {
    * This endpoint is used for error saving
    * Currently it just logs the error to console
   */
-  router.post("/errors", asyncHandler(async (req, res) => {
+  router.post("/errors", asyncHandler( (req, res) => {
     logger.info("New error reported", req.body);
 
     // TODO: uncomment and configure SES

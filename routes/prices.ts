@@ -1,16 +1,9 @@
 import { Request, Router } from "express";
 import asyncHandler from "express-async-handler";
-import {
-  cacheTTLMilliseconds,
-  enableLiteMode,
-} from "../config";
 import { getDataServiceId } from "../providers";
 import { Price } from "../models/price";
-import { logEvent } from "../helpers/amplitude-event-logger";
-import { assertValidSignature } from "../helpers/signature-verifier";
-import { priceParamsToPriceObj, getProviderFromParams } from "../utils";
+import { getProviderFromParams } from "../utils";
 import { logger } from "../helpers/logger";
-import { tryCleanCollection } from "../helpers/mongo";
 import { requestDataPackages, fetchDataPackages } from "@redstone-finance/sdk";
 import axios from "axios";
 import csvToJSON from "csv-file-to-json";
@@ -29,32 +22,6 @@ export interface PriceWithParams
   evmSignature?: string;
   liteEvmSignature?: string;
 }
-
-const addSinglePrice = async (params: PriceWithParams) => {
-  const price = new Price(priceParamsToPriceObj(params));
-  await price.save();
-};
-
-const addSeveralPrices = async (params: PriceWithParams[]) => {
-  const ops = [];
-  for (const price of params) {
-    ops.push({
-      insertOne: {
-        document: priceParamsToPriceObj(price),
-      },
-    });
-  }
-  await Price.bulkWrite(ops);
-};
-
-
-const getPricesCount = (reqBody: PriceWithParams) => {
-  if (Array.isArray(reqBody)) {
-    return reqBody.length;
-  } else {
-    return 1;
-  }
-};
 
 const getIp = (req: Request) => {
   const ip = req.ip;
@@ -156,13 +123,6 @@ export const prices = (router: Router) => {
    * It is used in redstone-api
    */
 
-  function shouldRunTestFeature(percentOfTestFeatureEnv) {
-    if (percentOfTestFeatureEnv) {
-      return Math.floor(Math.random() * 100) < Number(percentOfTestFeatureEnv);
-    } else {
-      return false;
-    }
-  }
 
   async function handleByOracleGateway(req, res, dataServiceId, params) {
     try {
@@ -448,13 +408,6 @@ export const prices = (router: Router) => {
     return res.json(response);
   }
 
-  function getDateTimeString(timestamp) {
-    const date = new Date(timestamp).toLocaleDateString("pl-PL");
-    const time = new Date(timestamp).toLocaleTimeString("pl-PL");
-    return `${date} ${time}`;
-  }
-
-
   router.get(
     "/prices",
     asyncHandler(async (req, res) => {
@@ -503,78 +456,6 @@ export const prices = (router: Router) => {
             providerDetails
           );
       }
-    })
-  );
-
-  /**
-   * This endpoint is used for posting a new price data.
-   * It supports posting a single price and several prices
-   */
-  router.post(
-    "/prices",
-    asyncHandler(async (req, res) => {
-      const reqBody = req.body as PriceWithParams;
-      let pricesSavedCount = 0;
-
-      // Saving API post event in amplitude
-      logEvent({
-        eventName: "api-post-request",
-        eventProps: {
-          pricesCount: getPricesCount(reqBody),
-        },
-        ip: getIp(req),
-      });
-
-      if (Array.isArray(reqBody)) {
-        const invalidPrices = reqBody.filter((p) => !p.value);
-        if (invalidPrices.length > 0) {
-          logger.error(
-            "Invalid prices with empty value: " + JSON.stringify(invalidPrices)
-          );
-        }
-
-        // Validating a signature of a randomly selected price
-        // We got rid of arweave signatures
-        // const priceToVerify = _.sample(reqBody);
-        // await assertValidSignature(priceToVerify);
-
-        // Adding several prices
-        await addSeveralPrices(reqBody);
-
-        // Cleaning older prices for the same provider after posting
-        // new ones in the lite mode
-        if (enableLiteMode) {
-          await tryCleanCollection(Price, {
-            provider: reqBody[0].provider,
-            timestamp: {
-              $lt: Number(reqBody[0].timestamp) - cacheTTLMilliseconds,
-            },
-          });
-        }
-
-        pricesSavedCount = reqBody.length;
-      } else {
-        // Validating the price signature
-        await assertValidSignature(reqBody);
-
-        // Adding a single price
-        await addSinglePrice(reqBody);
-        pricesSavedCount = 1;
-
-        // Cleaning prices for the same provider and symbol before posting
-        // a new one in the lite mode
-        if (enableLiteMode) {
-          await tryCleanCollection(Price, {
-            provider: reqBody.provider,
-            symbol: reqBody.symbol,
-            timestamp: {
-              $lt: Number(reqBody.timestamp) - cacheTTLMilliseconds,
-            },
-          });
-        }
-      }
-
-      return res.json({ msg: `Prices saved. count: ${pricesSavedCount}` });
     })
   );
 };
