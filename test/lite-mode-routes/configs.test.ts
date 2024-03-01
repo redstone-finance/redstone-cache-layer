@@ -1,10 +1,7 @@
 import request from "supertest";
 import { app } from "../../app";
-import { connect, closeDatabase } from "../helpers/test-db";
 
 describe.only("Testing configs route", () => {
-  beforeAll(async () => await connect());
-  afterAll(async () => await closeDatabase());
 
   test("Should return tokens config", async () => {
 

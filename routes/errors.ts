@@ -1,5 +1,4 @@
 import { Router } from "express";
-import asyncHandler from "express-async-handler";
 import { logger } from "../helpers/logger";
 // const { sendEmail } = require("../helpers/mail-sender");
 
@@ -9,7 +8,7 @@ export const errors = (router: Router) => {
    * This endpoint is used for error saving
    * Currently it just logs the error to console
   */
-  router.post("/errors", asyncHandler( (req, res) => {
+  router.post("/errors", (req, res) => {
     logger.info("New error reported", req.body);
 
     // TODO: uncomment and configure SES
@@ -24,5 +23,5 @@ export const errors = (router: Router) => {
     return res.json({
       msg: "Error reported",
     });
-  }));
+  });
 };

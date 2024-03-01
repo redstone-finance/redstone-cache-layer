@@ -1,5 +1,4 @@
 import { Router } from "express";
-import asyncHandler from "express-async-handler";
 import { saveMetric } from "../helpers/cloudwatch";
 
 export const metrics = (router: Router) => {
@@ -9,12 +8,12 @@ export const metrics = (router: Router) => {
    * Thanks to them we can analyse redstone-node performance and build
    * nice charts
   */
-  router.post("/metrics", asyncHandler( (req, res) => {
+  router.post("/metrics", (req, res) => {
     const { label, value } = req.body;
     saveMetric({ label, value });
 
     return res.json({
       msg: "Metric saved",
     });
-  }));
+  });
 };
