@@ -1,12 +1,9 @@
 process.env.LIGHT_MODE = "false";
 import request from "supertest";
 import { app } from "../../app";
-import { connect, closeDatabase } from "../helpers/test-db";
 import * as cloudwatch from "../../helpers/cloudwatch";
 
 describe("Testing metrics route", () => {
-  beforeAll(async () => await connect());
-  afterAll(async () => await closeDatabase());
 
   const testMetricValue = {
     label: "test-metric",

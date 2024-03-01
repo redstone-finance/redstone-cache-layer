@@ -20,7 +20,7 @@
     "arweave": "^1.10.14",
     "aws-sdk": "^2.931.0",
     "aws-serverless-express": "^3.4.0",
-    "axios": "^1.3.4",
+    "axios": "^1.6.7",
     "body-parser": "^1.19.0",
     "consola": "^2.15.3",
     "cors": "^2.8.5",
@@ -29,9 +29,7 @@
     "errorhandler": "^1.5.1",
     "express": "^4.18.1",
     "express-async-handler": "^1.1.4",
-    "lodash": "^4.17.21",
-    "mongodb-memory-server": "^7.5.1",
-    "mongoose": "^6.3.4"
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.101",
@@ -45,7 +43,6 @@
     "@types/supertest": "^2.0.12",
     "esbuild": "^0.14.48",
     "jest": "^28.0.1",
-    "mongodb": "^3.6.6",
     "sleep-promise": "^9.1.0",
     "supertest": "^6.1.3",
     "ts-jest": "^29.1.1",

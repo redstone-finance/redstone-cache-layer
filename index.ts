@@ -1,19 +1,8 @@
 import awsServerlessExpress from "aws-serverless-express";
 import { APIGatewayProxyEvent, Context } from "aws-lambda";
-import { enableLiteMode, dbUrl, defaultLocalPort } from "./config";
+import { defaultLocalPort } from "./config";
 import { app } from "./app";
 import { logger } from "./helpers/logger";
-import {
-  connectToMongoMemoryServer,
-  connectToRemoteMongo,
-} from "./helpers/mongo";
-
-// Connecting to mongoDB
-if (enableLiteMode) {
-  connectToMongoMemoryServer();
-} else {
-  connectToRemoteMongo(dbUrl);
-}
 
 // Exporting method for docker container for AWS lambda
 const server = awsServerlessExpress.createServer(app);

@@ -2,7 +2,7 @@
 import { logger } from "../helpers/logger";
 // import { isProduction } from "../config";
 
-export const saveMetric = async ({ label, value }) => {
+export const saveMetric = ({ label, value }) => {
   // We disabled saving metrics in cloudwatch because of
   // rapidly growing costs. We've switched to our self-hosted
   // metrics storage in oracle-monitoring instances
