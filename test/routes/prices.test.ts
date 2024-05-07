@@ -5,6 +5,7 @@ import { app } from "../../app";
 import uuid from "uuid-random";
 import { connect, closeDatabase } from "../helpers/test-db";
 import { getProviders } from "../../providers";
+import {sanitize} from "../../routes/prices";
 
 const provider = getProviderForTests();
 
@@ -239,6 +240,11 @@ describe("Testing EVM signature", () => {
     expect(getResponse.body[0]).toHaveProperty("evmSignature", priceWithEvmSignature.evmSignature);
   });
 
+  test("Test sanitizing timestamp", () => {
+    expect(sanitize(undefined)).toBeUndefined();
+    expect(sanitize("undefined")).toBeUndefined();
+    expect(sanitize(123)).toBe(123);
+  });
 });
 
 function getProviderForTests() {

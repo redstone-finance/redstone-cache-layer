@@ -68,7 +68,7 @@ const addSeveralPrices = async (params: PriceWithParams[]) => {
   await Price.bulkWrite(ops);
 };
 
-const sanitize = (value: number | undefined | "undefined") =>
+export const sanitize = (value: number | undefined | "undefined") =>
   (value !== undefined && value !== "undefined") ? value : undefined
 
 const getPriceForManyTokens = async (params: PriceWithParams) => {
