@@ -68,6 +68,9 @@ const addSeveralPrices = async (params: PriceWithParams[]) => {
   await Price.bulkWrite(ops);
 };
 
+const sanitize = (value: number | undefined | "undefined") =>
+  (value !== undefined && value !== "undefined") ? value : undefined
+
 const getPriceForManyTokens = async (params: PriceWithParams) => {
   // Parsing symbols params
   let tokens = [];
@@ -77,7 +80,7 @@ const getPriceForManyTokens = async (params: PriceWithParams) => {
 
   // Building filters
   const filters = { provider: params.provider };
-  if (params.toTimestamp !== undefined) {
+  if (sanitize(params.toTimestamp) !== undefined) {
     filters["timestamp"] = { $lte: params.toTimestamp };
   }
 
@@ -114,7 +117,7 @@ const getHistoricalPricesForSingleToken = async (params: PriceWithParams) => {
     timestamp: { $lte: params.toTimestamp } as { $lte: number; $gte?: number },
   };
 
-  if (params.fromTimestamp) {
+  if (sanitize(params.fromTimestamp)) {
     filters.timestamp.$gte = params.fromTimestamp;
   }
 
@@ -417,8 +420,8 @@ export const prices = (router: Router) => {
   ) {
     console.log("Executing single token with interval");
     if (
-      params.fromTimestamp === undefined ||
-      params.toTimestamp === undefined
+      sanitize(params.fromTimestamp) === undefined ||
+      sanitize(params.toTimestamp) === undefined
     ) {
       throw new Error(
         `Param fromTimestamp and toTimestamp are required when using interval`
@@ -496,12 +499,12 @@ export const prices = (router: Router) => {
         `When not passing fromTimestamp limit + offset can't be more than 1000, is: ${limit} + ${offset}`
       );
     }
-    const stop = params.toTimestamp
+    const stop = sanitize(params.toTimestamp)
       ? Math.floor(params.toTimestamp / 1000)
       : Math.ceil(Date.now() / 1000);
     const searchWindow = Math.max(limit + offset, 3);
     const start =
-      params.fromTimestamp !== undefined
+      sanitize(params.fromTimestamp) !== undefined
         ? Math.ceil(params.fromTimestamp / 1000)
         : stop - searchWindow * 60;
     console.log(
@@ -572,7 +575,7 @@ export const prices = (router: Router) => {
 
     console.log("Executing for many tokens");
     const stop =
-      params.toTimestamp !== undefined
+      sanitize(params.toTimestamp) !== undefined
         ? Math.floor(params.toTimestamp / 1000)
         : Math.ceil(Date.now() / 1000);
     const start = stop - 2 * 60;
@@ -658,7 +661,7 @@ export const prices = (router: Router) => {
     console.log(
       `DEBUG ${params.fromTimestamp} ${days30Ago} ${params.fromTimestamp}`
     );
-    if (params.fromTimestamp && days30Ago > Number(params.fromTimestamp)) {
+    if (sanitize(params.fromTimestamp) && days30Ago > Number(params.fromTimestamp)) {
       console.log(
         `isOldDataRequest with fromTimestamp: ${getDateTimeString(
           days30Ago
@@ -666,7 +669,7 @@ export const prices = (router: Router) => {
       );
       return true;
     } else {
-      const toTimestamp = params.toTimestamp
+      const toTimestamp = sanitize(params.toTimestamp)
         ? Number(params.toTimestamp)
         : Date.now();
       const limit = params.limit !== undefined ? Number(params.limit) : 1;
@@ -694,7 +697,7 @@ export const prices = (router: Router) => {
       const params = req.query as unknown as QueryParams;
       const dataServiceId = getDataServiceId(req.query.provider as string);
       getIp(req);
-      if (!params.fromTimestamp && !params.toTimestamp && !params.limit) {
+      if (!sanitize(params.fromTimestamp) && !sanitize(params.toTimestamp) && !params.limit) {
         return handleByOracleGateway(req, res, dataServiceId, params);
       }
 
@@ -723,7 +726,7 @@ export const prices = (router: Router) => {
             );
           }
           return res.json(await getPricesInTimeRangeForSingleToken(params));
-        } else if (params.toTimestamp !== undefined) {
+        } else if (sanitize(params.toTimestamp) !== undefined) {
           if (
             shouldRunTestFeature(
               process.env.TEST_SYMBOL_NO_INTERVAL_TO_TIMESTAMP_PERCENT
