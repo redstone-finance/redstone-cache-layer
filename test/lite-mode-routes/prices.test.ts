@@ -95,6 +95,7 @@ describe("Testing prices route", () => {
     const fetchResponse = await request(app)
       .get("/prices")
       .query({
+        fromTimestamp: timestamp,
         provider: provider.name,
         symbols: prices.map(p => p.symbol).join(","),
       })
