@@ -23,6 +23,7 @@ import axios from "axios";
 import csvToJSON from "csv-file-to-json";
 import { String } from "aws-sdk/clients/cloudsearch";
 import { time } from "console";
+import {validatePareter} from "./common"
 
 export interface PriceWithParams
   extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
@@ -319,14 +320,6 @@ const toMap = (priceList: any) => {
   return map;
 };
 
-function validatePareter(parameter: string) {
-  const onlyLettersPattern = /^[A-Z a-z.0-9=/_$-]+$/;
-  if (!parameter.match(onlyLettersPattern)) {
-    throw new Error(`Invalid parameter: ${parameter}`);
-  }
-  return parameter;
-}
-
 async function requestInflux(query: String) {
   const config = {
     headers: {
@@ -446,6 +439,7 @@ export const prices = (router: Router) => {
             |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 }))
             |> limit(n: ${limit}, offset: ${offset})
           `;
+    console.log(request)
     const results = await requestInflux(request);
     const sourceResults = results.filter(
       (element) =>
@@ -522,6 +516,7 @@ export const prices = (router: Router) => {
             |> limit(n: ${limit}, offset: ${offset})
             |> map(fn: (r) => ({ r with timestamp: int(v: r._time) / 1000000 })) 
           `;
+    console.log(request)
     const results = await requestInflux(request);
     const sourceResults = results.filter(
       (element) =>
@@ -655,9 +650,6 @@ export const prices = (router: Router) => {
   function isOldDataRequest(params) {
     const now = Date.now();
     const days30Ago = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    console.log(
-      `DEBUG ${params.fromTimestamp} ${days30Ago} ${params.fromTimestamp}`
-    );
     if (params.fromTimestamp && days30Ago > Number(params.fromTimestamp)) {
       console.log(
         `isOldDataRequest with fromTimestamp: ${getDateTimeString(
@@ -707,14 +699,8 @@ export const prices = (router: Router) => {
       if (params.symbol !== undefined) {
         if (params.interval !== undefined) {
           if (
-            shouldRunTestFeature(process.env.TEST_SYMBOL_INTERVAL_PERCENT) &&
             isOldDataRequest(params)
           ) {
-            console.log(
-              `Running TEST_SYMBOL_INTERVAL_PERCENT: ${JSON.stringify(
-                req.query
-              )}`
-            );
             return handleByInfluxWithSymbolAndInterval(
               res,
               params,
@@ -725,16 +711,8 @@ export const prices = (router: Router) => {
           return res.json(await getPricesInTimeRangeForSingleToken(params));
         } else if (params.toTimestamp !== undefined) {
           if (
-            shouldRunTestFeature(
-              process.env.TEST_SYMBOL_NO_INTERVAL_TO_TIMESTAMP_PERCENT
-            ) &&
             isOldDataRequest(params)
           ) {
-            console.log(
-              `Running TEST_SYMBOL_NO_INTERVAL_TO_TIMESTAMP_PERCENT: ${JSON.stringify(
-                req.query
-              )}`
-            );
             return handleByInfluxWithSymbolAndNoInterval(
               res,
               params,
@@ -746,16 +724,8 @@ export const prices = (router: Router) => {
           }
         } else {
           if (
-            shouldRunTestFeature(
-              process.env.TEST_SYMBOL_NO_INTERVAL_NO_TO_TIMESTAMP_PERCENT
-            ) &&
             isOldDataRequest(params)
           ) {
-            console.log(
-              `Running TEST_SYMBOL_NO_INTERVAL_NO_TO_TIMESTAMP_PERCENT: ${JSON.stringify(
-                req.query
-              )}`
-            );
             return handleByInfluxWithSymbolAndNoInterval(
               res,
               params,
@@ -768,12 +738,8 @@ export const prices = (router: Router) => {
         }
       } else {
         if (
-          shouldRunTestFeature(process.env.TEST_MANY_SYMBOLS_PERCENT) &&
           isOldDataRequest(params)
         ) {
-          console.log(
-            `Running TEST_MANY_SYMBOLS_PERCENT: ${JSON.stringify(req.query)}`
-          );
           return handleByInfluxWithManyTokens(
             res,
             params,
