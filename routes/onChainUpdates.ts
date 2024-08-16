@@ -29,23 +29,31 @@ export const onChainUpdates = (router: Router) => {
         "/on-chain-updates",
         asyncHandler(async (req, res) => {
 
-        const dataFeedId = "BTC"
-        const adapterName = "bnbBtc"
-
+            const dataFeedId = req.query.dataFeedId;
+            const adapterName = req.query.adapterName;
+            const daysRange = req.query.daysRange;
+            
         const request = `
             from(bucket: "redstone-transactions")
-            |> range(start: -7d)
+            |> range(start: -${daysRange}d)
             |> filter(fn: (r) =>
                 r._measurement == "redstoneTransactions" and
                 r._field == "value-${dataFeedId}" and
                 r.adapterName == "${adapterName}"
             )
-            |> keep(columns: ["_time", "_value", "value-${dataFeedId}", "_field", "sender"])
+            |> keep(columns: ["_time", "_value", "sender"])
           `;
 
             const influxResponse = await requestInflux(request)
+            const mappedResponse = influxResponse.map(dataPoint => {
+                return {
+                    timestamp: new Date(dataPoint._time).getTime(),
+                    value: dataPoint._value,
+                    sender: dataPoint.sender,
+                }
+            })
 
-            return res.json({ onChainUpdates: influxResponse });
+            return res.json({ onChainUpdates: mappedResponse });
          
         })
     );
