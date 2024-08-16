@@ -2,6 +2,7 @@ import { Request, Router } from "express";
 import asyncHandler from "express-async-handler";
 import axios from "axios";
 import csvToJSON from "csv-file-to-json";
+import {validatePareter} from "./common"
 
 async function requestInflux(query: String) {
   const config = {
@@ -29,20 +30,20 @@ export const onChainUpdates = (router: Router) => {
         "/on-chain-updates",
         asyncHandler(async (req, res) => {
 
-            const dataFeedId = req.query.dataFeedId;
-            const adapterName = req.query.adapterName;
-            const daysRange = req.query.daysRange;
+            const dataFeedId = validatePareter(req.query.dataFeedId as string);
+            const adapterName = validatePareter(req.query.adapterName as string);
+            const daysRange = validatePareter(req.query.daysRange as string);
             
-        const request = `
-            from(bucket: "redstone-transactions")
-            |> range(start: -${daysRange}d)
-            |> filter(fn: (r) =>
-                r._measurement == "redstoneTransactions" and
-                r._field == "value-${dataFeedId}" and
-                r.adapterName == "${adapterName}"
-            )
-            |> keep(columns: ["_time", "_value", "sender"])
-          `;
+            const request = `
+                from(bucket: "redstone-transactions")
+                |> range(start: -${daysRange}d)
+                |> filter(fn: (r) =>
+                    r._measurement == "redstoneTransactions" and
+                    r._field == "value-${dataFeedId}" and
+                    r.adapterName == "${adapterName}"
+                )
+                |> keep(columns: ["_time", "_value", "sender"])
+            `;
 
             const influxResponse = await requestInflux(request)
             const mappedResponse = influxResponse.map(dataPoint => {

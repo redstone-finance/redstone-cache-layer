@@ -23,6 +23,7 @@ import axios from "axios";
 import csvToJSON from "csv-file-to-json";
 import { String } from "aws-sdk/clients/cloudsearch";
 import { time } from "console";
+import {validatePareter} from "./common"
 
 export interface PriceWithParams
   extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
@@ -318,14 +319,6 @@ const toMap = (priceList: any) => {
   }
   return map;
 };
-
-function validatePareter(parameter: string) {
-  const onlyLettersPattern = /^[A-Z a-z.0-9=/_$-]+$/;
-  if (!parameter.match(onlyLettersPattern)) {
-    throw new Error(`Invalid parameter: ${parameter}`);
-  }
-  return parameter;
-}
 
 async function requestInflux(query: String) {
   const config = {
