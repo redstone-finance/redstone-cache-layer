@@ -12,7 +12,7 @@ export const feedsAnswersUpdate = (router: Router) => {
             const adapterName = validatePareter(req.query.adapterName as string);
             const request = `
             from(bucket: "redstone-transactions")
-            |> range(start: -24h)
+            |> range(start: -3d)
             |> filter(fn: (r) =>
                 r._measurement == "redstoneTransactions" and
                 r.adapterName == "${adapterName}" and
