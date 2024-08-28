@@ -3,27 +3,7 @@ import asyncHandler from "express-async-handler";
 import axios from "axios";
 import csvToJSON from "csv-file-to-json";
 import { validatePareter } from "./common"
-
-async function requestInflux(query: String) {
-    const config = {
-        headers: {
-            Authorization: `Token ${process.env.INFLUXDB_TOKEN}`,
-            "Content-Type": "application/vnd.flux",
-        },
-    };
-    try {
-        const result = await axios.post(
-            `${process.env.INFLUXDB_URL}/api/v2/query?org=redstone`,
-            query,
-            config
-        );
-        const json = csvToJSON({ data: result.data });
-        return json;
-    } catch (error) {
-        console.error(error);
-        throw new Error("Request to influxdb failed");
-    }
-}
+import { requestInflux } from "./onChainUpdates"
 
 export const feedsAnswersUpdate = (router: Router) => {
     router.get(
@@ -40,18 +20,19 @@ export const feedsAnswersUpdate = (router: Router) => {
             )
             |> group(columns: ["_field"])
             |> last()
+            |> keep(columns: ["_time", "_value", "_field"])
         `;
 
             const influxResponse = await requestInflux(request)
-            const mappedResponse = influxResponse.map(dataPoint => {
+            const mappedResponse = influxResponse.map(relayerData => {
                 return {
-                    timestamp: new Date(dataPoint._time).getTime(),
-                    value: dataPoint._value,
-                    sender: dataPoint.sender,
+                    feedId: relayerData._value.replace("value", ""),
+                    value: relayerData._value,
+                    timestamp: relayerData._time,
                 }
             })
 
-            return res.json(influxResponse);
+            return res.json(mappedResponse);
 
         })
     );
