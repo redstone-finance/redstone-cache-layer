@@ -9,30 +9,45 @@ export const feedsAnswersUpdate = (router: Router) => {
     router.get(
         "/feeds-answers-update",
         asyncHandler(async (req, res) => {
-            const adapterName = validatePareter(req.query.adapterName as string);
             const request = `
             from(bucket: "redstone-transactions")
-            |> range(start: -3d)
+            |> range(start: -24h)
             |> filter(fn: (r) =>
                 r._measurement == "redstoneTransactions" and
-                r.adapterName == "${adapterName}" and
                 r._field =~ /value-.*$/
             )
-            |> group(columns: ["_field"])
+            |> group(columns: ["adapterName", "_field"])
             |> last()
-            |> keep(columns: ["_time", "_value", "_field"])
+            |> keep(columns: ["_time", "_value", "adapterName", "_field"])
         `;
 
             const influxResponse = await requestInflux(request)
-            const mappedResponse = influxResponse.map(relayerData => {
-                return {
-                    feedId: relayerData._value.replace("value", ""),
-                    value: relayerData._value,
-                    timestamp: relayerData._time,
-                }
-            })
+            const mapInfluxResponse = () => {
+                const result = {};
 
-            return res.json(mappedResponse);
+                influxResponse.forEach(item => {
+                    const adapterName = item.adapterName;
+                    if (!adapterName || adapterName === 'undefined') {
+                        return;
+                    }
+                    const feedId = item._field.replace('value-', '');
+                    const timestamp = item._time;
+                    const value = item._value;
+
+                    if (!result[adapterName]) {
+                        result[adapterName] = {};
+                    }
+
+                    result[adapterName][feedId] = {
+                        timestamp,
+                        value
+                    };
+                });
+
+                return result;
+            };
+
+            return res.json(mapInfluxResponse());
 
         })
     );
