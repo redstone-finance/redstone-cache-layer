@@ -16,9 +16,7 @@ docker-compose up
 ```
 Create .env file, by renaming the example
 ```.example.env -> .env```
-Add additional auth token for influx in .env
-
-```INFLUXDB_TOKEN=```
+Add additional auth token for influx in .env - `INFLUXDB_TOKEN`
 Token can be obtained [here]( https://eu-west-1.console.aws.amazon.com/systems-manager/parameters/%252Fdev%252Finfluxdb%252Ftoken/description?region=eu-west-1&tab=Table#list_parameter_filters=Name:Contains:influx)
 
 ### To run locally
