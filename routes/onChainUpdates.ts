@@ -4,7 +4,7 @@ import axios from "axios";
 import csvToJSON from "csv-file-to-json";
 import {validatePareter} from "./common"
 
-async function requestInflux(query: String) {
+export async function requestInflux(query: String) {
   const config = {
     headers: {
       Authorization: `Token ${process.env.INFLUXDB_TOKEN}`,
