@@ -2,6 +2,7 @@ import express from "express";
 import { prices } from "./prices";
 import { onChainUpdates } from "./onChainUpdates";
 import { feedsAnswersUpdate } from "./feedsAnswersUpdates";
+import { tokenPrices } from "./tokenPrices";
 import { metrics } from "./metrics";
 import { errors } from "./errors";
 import { configs } from "./configs";
@@ -16,6 +17,7 @@ export const getRouter = () => {
   providers(router);
   onChainUpdates(router);
   feedsAnswersUpdate(router);
+  tokenPrices(router)
   if (!enableLiteMode) {
     metrics(router);
     errors(router);
