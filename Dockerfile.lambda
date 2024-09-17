@@ -2,19 +2,16 @@
 # for redstone cache layer express app connected to the Mongo DB
 # Mongo DB connection url must be specified in .secrets.json file
 
-FROM public.ecr.aws/lambda/nodejs:16 as builder
+FROM public.ecr.aws/lambda/nodejs:20 as builder
 WORKDIR /usr/app
 COPY package.json package.json
 COPY yarn.lock yarn.lock
 RUN npm i -g yarn
-RUN yum update -y
-RUN yum groupinstall "Development Tools" -y
-RUN yum install -y git python3 g++ make
 RUN yarn install
 COPY . .
 RUN yarn build
 
-FROM public.ecr.aws/lambda/nodejs:16
+FROM public.ecr.aws/lambda/nodejs:20
 WORKDIR ${LAMBDA_TASK_ROOT}
 ENV MODE=PROD
 COPY --from=builder /usr/app/ ./
