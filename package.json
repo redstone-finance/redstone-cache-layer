@@ -26,13 +26,14 @@
     "cors": "^2.8.5",
     "csv-file-to-json": "^4.0.5",
     "deep-sort-object": "^1.0.2",
-    "errorhandler": "^1.5.1",
     "dotenv": "^16.0.3",
+    "errorhandler": "^1.5.1",
     "express": "^4.18.1",
     "express-async-handler": "^1.1.4",
     "lodash": "^4.17.21",
     "mongodb-memory-server": "^7.5.1",
-    "mongoose": "^6.3.4"
+    "mongoose": "^6.3.4",
+    "puppeteer": "^23.3.1"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.101",
