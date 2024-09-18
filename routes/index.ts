@@ -6,7 +6,6 @@ import { metrics } from "./metrics";
 import { errors } from "./errors";
 import { configs } from "./configs";
 import { providers } from "./providers";
-import tvs from './tvs'
 import { enableLiteMode } from "../config";
 
 export const getRouter = () => {
@@ -15,7 +14,6 @@ export const getRouter = () => {
   prices(router);
   configs(router);
   providers(router);
-  tvs(router);
   onChainUpdates(router);
   feedsAnswersUpdate(router);
   if (!enableLiteMode) {
