@@ -1,13 +1,12 @@
 import { Request, Router } from "express";
 import asyncHandler from "express-async-handler";
 import { FilterQuery, PipelineStage, Document } from "mongoose";
-import _ from "lodash";
 import {
-  bigLimitWithMargin,
-  defaultLimit,
-  cacheTTLMilliseconds,
-  maxLimitForPrices,
-  enableLiteMode,
+    bigLimitWithMargin,
+    defaultLimit,
+    cacheTTLMilliseconds,
+    maxLimitForPrices,
+    enableLiteMode, config,
 } from "../config";
 import { getConfig } from "./configs";
 import { getDataServiceId } from "../providers";
@@ -18,12 +17,15 @@ import { priceParamsToPriceObj, getProviderFromParams } from "../utils";
 import { logger } from "../helpers/logger";
 import { tryCleanCollection } from "../helpers/mongo";
 import { requestDataPackages, fetchDataPackages } from "@redstone-finance/sdk";
-import { providerToDataServiceId } from "../providers";
 import axios from "axios";
 import csvToJSON from "csv-file-to-json";
 import { String } from "aws-sdk/clients/cloudsearch";
-import { time } from "console";
 import {validatePareter} from "./common"
+import {Point} from "@influxdata/influxdb-client";
+import {
+  ITelemetrySendService,
+  TelemetrySendService,
+} from "../telemetry/TelemetrySendService";
 
 export interface PriceWithParams
   extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
@@ -42,6 +44,56 @@ export interface PriceWithParams
 const addSinglePrice = async (params: PriceWithParams) => {
   const price = new Price(priceParamsToPriceObj(params));
   await price.save();
+};
+
+export const createPointFromPriceObj = (params: PriceWithParams): Point => {
+  const point = new Point("prices");
+
+  //Required
+  point.tag("id", params.id);
+  point.tag("symbol", params.symbol);
+  point.tag("provider", params.provider);
+  point.tag("permawebTx", params.permawebTx);
+  point.tag("version", params.version);
+  point.floatField("value", params.value);
+
+  //Optional
+  params.providerPublicKey && point.tag("providerPublicKey", params.providerPublicKey);
+  params.symbols && point.tag("symbols", params.symbols);
+  params.signature && point.tag("signature", params.signature);
+  params.evmSignature && point.tag("evmSignature", params.evmSignature);
+  params.liteEvmSignature && point.tag("liteEvmSignature", params.liteEvmSignature);
+  params.minutes !== undefined && point.intField("minutes", params.minutes);
+  params.limit !== undefined && point.intField("limit", params.limit);
+  params.offset !== undefined && point.intField("offset", params.offset);
+  params.fromTimestamp !== undefined && point.intField("fromTimestamp", params.fromTimestamp);
+  params.toTimestamp !== undefined && point.intField("toTimestamp", params.toTimestamp);
+  params.interval !== undefined && point.intField("interval", params.interval);
+
+  params.source && point.stringField("source", JSON.stringify(params.source));
+
+  point.timestamp(params.timestamp);
+
+  return point;
+};
+
+const addSinglePriceInflux = async (params: PriceWithParams) => {
+  const price = priceParamsToPriceObj(params);
+  const point = createPointFromPriceObj(price);
+
+  let telemetryService;
+  if (config.influxBroadcasterUrl && config.influxBroadcasterAuthToken) {
+    telemetryService = new TelemetrySendService({
+      url: config.influxBroadcasterUrl,
+      token: config.influxBroadcasterAuthToken,
+    });
+  }
+  else {
+    return logger.info("No telemetry service set, exiting");
+  }
+
+  telemetryService.queueToSendMetric(point);
+  telemetryService!.sendMetricsBatch();
 };
 
 const getLatestPricesForSingleToken = async (params: PriceWithParams) => {
@@ -812,6 +864,7 @@ export const prices = (router: Router) => {
 
         // Adding a single price
         await addSinglePrice(reqBody);
+        await addSinglePriceInflux(reqBody);
         pricesSavedCount = 1;
 
         // Cleaning prices for the same provider and symbol before posting

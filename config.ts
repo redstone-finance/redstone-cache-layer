@@ -1,5 +1,14 @@
+import { RedstoneCommon } from "@redstone-finance/utils";
+import { z } from "zod";
 import dotenv from "dotenv";
 dotenv.config();
+
+export interface InfluxBroadcasterConfig {
+  influxBroadcasterUrl?: string;
+  influxBroadcasterAuthToken?: string;
+  telemetryUrl?: string;
+  telemetryAuthorizationToken?: string;
+}
 
 const getEnv = (name: string, defaultValue: any) => {
   return process.env[name] || defaultValue;
@@ -20,6 +29,25 @@ const dbUrls = {
   local: "mongodb://localhost:27017/redstone",
   prod: "",
 };
+
+export const config: InfluxBroadcasterConfig = Object.freeze({
+  influxBroadcasterUrl: RedstoneCommon.getFromEnv(
+    "INFLUX_BROADCASTER_URL",
+    z.string().optional()
+  ),
+  influxBroadcasterAuthToken: RedstoneCommon.getFromEnv(
+    "INFLUX_BROADCASTER_AUTH_TOKEN",
+    z.string().optional()
+  ),
+  telemetryUrl: RedstoneCommon.getFromEnv(
+    "TELEMETRY_URL",
+    z.string().url().optional()
+  ),
+  telemetryAuthorizationToken: RedstoneCommon.getFromEnv(
+    "TELEMETRY_AUTHORIZATION_TOKEN",
+    z.string().optional()
+  ),
+} as InfluxBroadcasterConfig);
 
 if (!enableLiteMode && !isTest) {
   dbUrls["prod"] = process.env.MONGO_DB_URL;
