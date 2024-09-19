@@ -1,11 +1,10 @@
-import {
-  InfluxDB,
-  Point,
-  WritePrecisionType,
-} from "@influxdata/influxdb-client";
-import { RedstoneCommon, loggerFactory } from "@redstone-finance/utils";
-const logger = loggerFactory("helpers/InfluxService");
+import {InfluxDB, Point, WritePrecisionType,} from "@influxdata/influxdb-client";
+import {loggerFactory, RedstoneCommon} from "@redstone-finance/utils";
 import providerDataServiceMap from './provider-dataservice-map.json';
+import {config} from "../config";
+import {PriceWithParams} from "../routes/prices";
+
+const logger = loggerFactory("helpers/InfluxService");
 
 export interface InfluxConstructorAuthParams {
   url: string;
@@ -131,4 +130,35 @@ export const getDataServiceIdForInflux = (provider: string): string => {
     throw new Error(`Data service Id not found for provider: ${provider}`);
   }
   return dataServiceId;
+};
+
+export const createPointFromPriceObj = (params: PriceWithParams): Point => {
+  const point = new Point("redstone-api-prices");
+
+  //Required
+  point.tag("symbol", params.symbol);
+  point.floatField("value", params.value);
+  const dataServiceId = getDataServiceIdForInflux(params.provider);
+  point.tag("dataServiceId", dataServiceId);
+
+  //Optional
+  params.liteEvmSignature && point.stringField("liteEvmSignature", params.liteEvmSignature);
+  const sourceKey = Object.keys(params.source)[0];
+  point.stringField("source", sourceKey);
+  params.source && point.stringField("source", params.source);
+
+  point.timestamp(params.timestamp);
+  return point;
+};
+
+export const createInfluxService = () => {
+  if (config.influxBroadcasterUrl && config.influxBroadcasterAuthToken) {
+    return new InfluxService({
+      url: config.influxBroadcasterUrl,
+      token: config.influxBroadcasterAuthToken,
+    });
+  } else {
+    logger.info("No influx service set, exiting");
+    return null;
+  }
 };

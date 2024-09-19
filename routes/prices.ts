@@ -1,30 +1,20 @@
-import { Request, Router } from "express";
+import {Request, Router} from "express";
 import asyncHandler from "express-async-handler";
-import { FilterQuery, PipelineStage, Document } from "mongoose";
-import {
-  bigLimitWithMargin,
-  defaultLimit,
-  cacheTTLMilliseconds,
-  maxLimitForPrices,
-  enableLiteMode, config,
-} from "../config";
-import { getDataServiceId } from "../providers";
-import { Price, priceToObject } from "../models/price";
-import { logEvent } from "../helpers/amplitude-event-logger";
-import { assertValidSignature } from "../helpers/signature-verifier";
-import { priceParamsToPriceObj, getProviderFromParams } from "../utils";
-import { logger } from "../helpers/logger";
-import { tryCleanCollection } from "../helpers/mongo";
-import { requestDataPackages, fetchDataPackages } from "@redstone-finance/sdk";
+import {FilterQuery, PipelineStage} from "mongoose";
+import {bigLimitWithMargin, cacheTTLMilliseconds, defaultLimit, enableLiteMode, maxLimitForPrices,} from "../config";
+import {getDataServiceId} from "../providers";
+import {Price, priceToObject} from "../models/price";
+import {logEvent} from "../helpers/amplitude-event-logger";
+import {assertValidSignature} from "../helpers/signature-verifier";
+import {getProviderFromParams, priceParamsToPriceObj} from "../utils";
+import {logger} from "../helpers/logger";
+import {tryCleanCollection} from "../helpers/mongo";
+import {fetchDataPackages, requestDataPackages} from "@redstone-finance/sdk";
 import axios from "axios";
 import csvToJSON from "csv-file-to-json";
-import { String } from "aws-sdk/clients/cloudsearch";
+import {String} from "aws-sdk/clients/cloudsearch";
 import {validatePareter} from "./common"
-import {Point} from "@influxdata/influxdb-client";
-import {
-  getDataServiceIdForInflux,
-  InfluxService,
-} from "../helpers/influx";
+import {createInfluxService, createPointFromPriceObj,} from "../helpers/influx";
 
 export interface PriceWithParams
   extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
@@ -43,38 +33,6 @@ export interface PriceWithParams
 const addSinglePriceMongo = async (params: PriceWithParams) => {
   const price = new Price(priceParamsToPriceObj(params));
   await price.save();
-};
-
-export const createPointFromPriceObj = (params: PriceWithParams): Point => {
-  const point = new Point("redstone-api-prices");
-
-  //Required
-  point.tag("symbol", params.symbol);
-  const dataServiceId = getDataServiceIdForInflux(params.provider);
-  point.tag("dataServiceId", dataServiceId);
-
-  point.floatField("value", params.value);
-
-  //Optional
-  params.liteEvmSignature && point.stringField("liteEvmSignature", params.liteEvmSignature);
-  params.minutes !== undefined && point.intField("minutes", params.minutes);
-  params.source && point.stringField("source", JSON.stringify(params.source));
-
-  point.timestamp(params.timestamp);
-
-  return point;
-};
-
-export const createInfluxService = () => {
-  if (config.influxBroadcasterUrl && config.influxBroadcasterAuthToken) {
-    return new InfluxService({
-      url: config.influxBroadcasterUrl,
-      token: config.influxBroadcasterAuthToken,
-    });
-  } else {
-    logger.info("No influx service set, exiting");
-    return null;
-  }
 };
 
 const addSinglePriceInflux = async (params: PriceWithParams) => {
