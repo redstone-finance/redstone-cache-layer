@@ -5,6 +5,7 @@ import {
 } from "@influxdata/influxdb-client";
 import { RedstoneCommon, loggerFactory } from "@redstone-finance/utils";
 const logger = loggerFactory("helpers/InfluxService");
+import providerDataServiceMap from './provider-dataservice-map.json';
 
 export interface InfluxConstructorAuthParams {
   url: string;
@@ -122,3 +123,12 @@ let influxServiceInstance:
   | InfluxService
   | MockInfluxService
   | undefined;
+
+
+export const getDataServiceIdForInflux = (provider: string): string => {
+  const dataServiceId = providerDataServiceMap[provider];
+  if (!dataServiceId) {
+    throw new Error(`Data service Id not found for provider: ${provider}`);
+  }
+  return dataServiceId;
+};

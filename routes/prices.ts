@@ -8,7 +8,6 @@ import {
   maxLimitForPrices,
   enableLiteMode, config,
 } from "../config";
-import { getConfig } from "./configs";
 import { getDataServiceId } from "../providers";
 import { Price, priceToObject } from "../models/price";
 import { logEvent } from "../helpers/amplitude-event-logger";
@@ -23,9 +22,9 @@ import { String } from "aws-sdk/clients/cloudsearch";
 import {validatePareter} from "./common"
 import {Point} from "@influxdata/influxdb-client";
 import {
-  IInfluxService,
+  getDataServiceIdForInflux,
   InfluxService,
-} from "../helpers/Influx";
+} from "../helpers/influx";
 
 export interface PriceWithParams
   extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
@@ -41,7 +40,7 @@ export interface PriceWithParams
   liteEvmSignature?: string;
 }
 
-const addSinglePrice = async (params: PriceWithParams) => {
+const addSinglePriceMongo = async (params: PriceWithParams) => {
   const price = new Price(priceParamsToPriceObj(params));
   await price.save();
 };
@@ -51,7 +50,9 @@ export const createPointFromPriceObj = (params: PriceWithParams): Point => {
 
   //Required
   point.tag("symbol", params.symbol);
-  point.tag("provider", params.provider);
+  const dataServiceId = getDataServiceIdForInflux(params.provider);
+  point.tag("dataServiceId", dataServiceId);
+
   point.floatField("value", params.value);
 
   //Optional
@@ -101,7 +102,7 @@ const getLatestPricesForSingleToken = async (params: PriceWithParams) => {
   return prices.map(priceToObject);
 };
 
-const addSeveralPrices = async (params: PriceWithParams[]) => {
+const addSeveralPricesMongo = async (params: PriceWithParams[]) => {
   const ops = [];
   for (const price of params) {
     ops.push({
@@ -854,8 +855,19 @@ export const prices = (router: Router) => {
         // await assertValidSignature(priceToVerify);
 
         // Adding several prices
-        await addSeveralPrices(reqBody);
-        await addSeveralPricesInflux(reqBody);
+        try {
+          await addSeveralPricesMongo(reqBody);
+        } catch (mongoError) {
+          logger.error("Error saving prices to MongoDB: ", mongoError);
+          throw mongoError;
+        }
+        try {
+          await addSeveralPricesInflux(reqBody);
+        } catch (influxError) {
+          logger.error("Error saving prices to InfluxDB: ", influxError);
+          throw influxError;
+        }
+
 
         // Cleaning older prices for the same provider after posting
         // new ones in the lite mode
@@ -874,8 +886,18 @@ export const prices = (router: Router) => {
         await assertValidSignature(reqBody);
 
         // Adding a single price
-        await addSinglePrice(reqBody);
-        await addSinglePriceInflux(reqBody);
+        try {
+          await addSinglePriceMongo(reqBody);
+        } catch (mongoError) {
+          logger.error("Error saving price to MongoDB: ", mongoError);
+          throw mongoError;
+        }
+        try {
+          await addSinglePriceInflux(reqBody);
+        } catch (influxError) {
+          logger.error("Error saving price to InfluxDB: ", influxError);
+          throw influxError;
+        }
         pricesSavedCount = 1;
 
         // Cleaning prices for the same provider and symbol before posting
