@@ -6,8 +6,6 @@ dotenv.config();
 export interface InfluxBroadcasterConfig {
   influxBroadcasterUrl?: string;
   influxBroadcasterAuthToken?: string;
-  telemetryUrl?: string;
-  telemetryAuthorizationToken?: string;
 }
 
 const getEnv = (name: string, defaultValue: any) => {
@@ -37,14 +35,6 @@ export const config: InfluxBroadcasterConfig = Object.freeze({
   ),
   influxBroadcasterAuthToken: RedstoneCommon.getFromEnv(
     "INFLUX_BROADCASTER_AUTH_TOKEN",
-    z.string().optional()
-  ),
-  telemetryUrl: RedstoneCommon.getFromEnv(
-    "TELEMETRY_URL",
-    z.string().url().optional()
-  ),
-  telemetryAuthorizationToken: RedstoneCommon.getFromEnv(
-    "TELEMETRY_AUTHORIZATION_TOKEN",
     z.string().optional()
   ),
 } as InfluxBroadcasterConfig);

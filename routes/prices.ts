@@ -2,11 +2,11 @@ import { Request, Router } from "express";
 import asyncHandler from "express-async-handler";
 import { FilterQuery, PipelineStage, Document } from "mongoose";
 import {
-    bigLimitWithMargin,
-    defaultLimit,
-    cacheTTLMilliseconds,
-    maxLimitForPrices,
-    enableLiteMode, config,
+  bigLimitWithMargin,
+  defaultLimit,
+  cacheTTLMilliseconds,
+  maxLimitForPrices,
+  enableLiteMode, config,
 } from "../config";
 import { getConfig } from "./configs";
 import { getDataServiceId } from "../providers";
@@ -23,9 +23,9 @@ import { String } from "aws-sdk/clients/cloudsearch";
 import {validatePareter} from "./common"
 import {Point} from "@influxdata/influxdb-client";
 import {
-  ITelemetrySendService,
-  TelemetrySendService,
-} from "../telemetry/TelemetrySendService";
+  IInfluxService,
+  InfluxService,
+} from "../helpers/Influx";
 
 export interface PriceWithParams
   extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
@@ -47,29 +47,16 @@ const addSinglePrice = async (params: PriceWithParams) => {
 };
 
 export const createPointFromPriceObj = (params: PriceWithParams): Point => {
-  const point = new Point("prices");
+  const point = new Point("redstone-api-prices");
 
   //Required
-  point.tag("id", params.id);
   point.tag("symbol", params.symbol);
   point.tag("provider", params.provider);
-  point.tag("permawebTx", params.permawebTx);
-  point.tag("version", params.version);
   point.floatField("value", params.value);
 
   //Optional
-  params.providerPublicKey && point.tag("providerPublicKey", params.providerPublicKey);
-  params.symbols && point.tag("symbols", params.symbols);
-  params.signature && point.tag("signature", params.signature);
-  params.evmSignature && point.tag("evmSignature", params.evmSignature);
-  params.liteEvmSignature && point.tag("liteEvmSignature", params.liteEvmSignature);
+  params.liteEvmSignature && point.stringField("liteEvmSignature", params.liteEvmSignature);
   params.minutes !== undefined && point.intField("minutes", params.minutes);
-  params.limit !== undefined && point.intField("limit", params.limit);
-  params.offset !== undefined && point.intField("offset", params.offset);
-  params.fromTimestamp !== undefined && point.intField("fromTimestamp", params.fromTimestamp);
-  params.toTimestamp !== undefined && point.intField("toTimestamp", params.toTimestamp);
-  params.interval !== undefined && point.intField("interval", params.interval);
-
   params.source && point.stringField("source", JSON.stringify(params.source));
 
   point.timestamp(params.timestamp);
@@ -77,23 +64,28 @@ export const createPointFromPriceObj = (params: PriceWithParams): Point => {
   return point;
 };
 
+export const createInfluxService = () => {
+  if (config.influxBroadcasterUrl && config.influxBroadcasterAuthToken) {
+    return new InfluxService({
+      url: config.influxBroadcasterUrl,
+      token: config.influxBroadcasterAuthToken,
+    });
+  } else {
+    logger.info("No influx service set, exiting");
+    return null;
+  }
+};
+
 const addSinglePriceInflux = async (params: PriceWithParams) => {
   const price = priceParamsToPriceObj(params);
   const point = createPointFromPriceObj(price);
 
-  let telemetryService;
-  if (config.influxBroadcasterUrl && config.influxBroadcasterAuthToken) {
-    telemetryService = new TelemetrySendService({
-      url: config.influxBroadcasterUrl,
-      token: config.influxBroadcasterAuthToken,
-    });
-  }
-  else {
-    return logger.info("No telemetry service set, exiting");
+  const influx = createInfluxService();
+  if (!influx) {
+    return;
   }
 
-  telemetryService.queueToSendMetric(point);
-  telemetryService!.sendMetricsBatch();
+  await influx.sendOnePoint(point);
 };
 
 const getLatestPricesForSingleToken = async (params: PriceWithParams) => {
@@ -119,6 +111,24 @@ const addSeveralPrices = async (params: PriceWithParams[]) => {
     });
   }
   await Price.bulkWrite(ops);
+};
+
+const addSeveralPricesInflux = async (params: PriceWithParams[]) => {
+  const influx = createInfluxService();
+  if (!influx) {
+    return;
+  }
+
+  let price;
+  let point;
+
+  for (const param of params) {
+    price = priceParamsToPriceObj(param);
+    point = createPointFromPriceObj(price);
+    influx.queueOnePoint(point);
+  }
+
+  await influx.sendQueuedPoints();
 };
 
 const getPriceForManyTokens = async (params: PriceWithParams) => {
@@ -845,6 +855,7 @@ export const prices = (router: Router) => {
 
         // Adding several prices
         await addSeveralPrices(reqBody);
+        await addSeveralPricesInflux(reqBody);
 
         // Cleaning older prices for the same provider after posting
         // new ones in the lite mode

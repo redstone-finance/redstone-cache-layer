@@ -4,8 +4,7 @@ import {
   WritePrecisionType,
 } from "@influxdata/influxdb-client";
 import { RedstoneCommon, loggerFactory } from "@redstone-finance/utils";
-import { config } from "../config";
-const logger = loggerFactory("telemetry/TelemetrySendService");
+const logger = loggerFactory("helpers/InfluxService");
 
 export interface InfluxConstructorAuthParams {
   url: string;
@@ -24,16 +23,16 @@ interface InfluxAuthParams extends InfluxConnectionInfo {
   precision: WritePrecisionType;
 }
 
-export interface ITelemetrySendService {
-  queueToSendMetric(point: Point): void;
-
-  sendMetricsBatch(): Promise<void>;
+export interface IInfluxService {
+  queueOnePoint(point: Point): void;
+  sendOnePoint(point: Point): Promise<void>;
+  sendQueuedPoints(): Promise<void>;
 }
 
-export class TelemetrySendService implements ITelemetrySendService {
+export class InfluxService implements IInfluxService {
   private influx: InfluxDB;
   private authParams: InfluxAuthParams;
-  private metrics: Point[] = [];
+  private points: Point[] = [];
 
   private static parseInfluxUrl(influxUrl: string): InfluxConnectionInfo {
     const parsedUrl = new URL(influxUrl);
@@ -50,7 +49,7 @@ export class TelemetrySendService implements ITelemetrySendService {
   }
 
   constructor(constructorAuthParams: InfluxConstructorAuthParams) {
-    const connectionInfo = TelemetrySendService.parseInfluxUrl(
+    const connectionInfo = InfluxService.parseInfluxUrl(
       constructorAuthParams.url
     );
     this.authParams = {
@@ -81,57 +80,45 @@ export class TelemetrySendService implements ITelemetrySendService {
     );
   }
 
-  queueToSendMetric(point: Point) {
-    this.metrics.push(point);
+  queueOnePoint(point: Point) {
+    this.points.push(point);
   }
 
-  async sendMetricsBatch() {
-    logger.info(`Sending batch with ${this.metrics.length} metrics`);
+  async sendOnePoint(point: Point) {
+    this.points.push(point);
+    await this.sendQueuedPoints();
+  }
+
+  async sendQueuedPoints() {
+    logger.info(`Sending batch with ${this.points.length} points`);
 
     const writeApi = this.getWriteApi();
-    writeApi.writePoints(this.metrics);
-    this.metrics = [];
+    writeApi.writePoints(this.points);
+    this.points = [];
 
     try {
       await writeApi.close();
-      logger.info(`Metrics sent`);
+      logger.info(`Points sent`);
     } catch (error) {
       logger.error(
-        `Failed saving metric: ${RedstoneCommon.stringifyError(error)}`
+        `Failed saving points: ${RedstoneCommon.stringifyError(error)}`
       );
     }
   }
 }
 
-class MockTelemetrySendService implements ITelemetrySendService {
+class MockInfluxService implements IInfluxService {
   // eslint-disable-next-line
-  queueToSendMetric(_point: Point) {}
+  queueOnePoint(_point: Point) {}
 
   // eslint-disable-next-line
-  async sendMetricsBatch() {}
+  async sendOnePoint(_point: Point) {}
+
+  // eslint-disable-next-line
+  async sendQueuedPoints() {}
 }
 
-let telemetrySendServiceInstance:
-  | TelemetrySendService
-  | MockTelemetrySendService
+let influxServiceInstance:
+  | InfluxService
+  | MockInfluxService
   | undefined;
-
-export function isTelemetryEnabled() {
-  return !!(config.telemetryUrl && config.telemetryAuthorizationToken);
-}
-
-export function getTelemetrySendService():
-  | TelemetrySendService
-  | MockTelemetrySendService {
-  if (!telemetrySendServiceInstance) {
-    if (!isTelemetryEnabled()) {
-      telemetrySendServiceInstance = new MockTelemetrySendService();
-    } else {
-      telemetrySendServiceInstance = new TelemetrySendService({
-        url: config.telemetryUrl!,
-        token: config.telemetryAuthorizationToken!,
-      });
-    }
-  }
-  return telemetrySendServiceInstance;
-}
