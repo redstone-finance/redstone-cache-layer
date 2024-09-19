@@ -145,7 +145,6 @@ export const createPointFromPriceObj = (params: PriceWithParams): Point => {
   params.liteEvmSignature && point.stringField("liteEvmSignature", params.liteEvmSignature);
   const sourceKey = Object.keys(params.source)[0];
   point.stringField("source", sourceKey);
-  params.source && point.stringField("source", params.source);
 
   point.timestamp(params.timestamp);
   return point;
