@@ -2,7 +2,7 @@ import { Request, Router } from "express";
 import asyncHandler from "express-async-handler";
 import axios from "axios";
 import csvToJSON from "csv-file-to-json";
-import { validatePareter } from "./common"
+import { validateParameter } from "./common"
 import { requestInflux } from "./onChainUpdates"
 
 export const feedsAnswersUpdate = (router: Router) => {

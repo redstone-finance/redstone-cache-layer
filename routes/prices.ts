@@ -13,7 +13,7 @@ import {fetchDataPackages, requestDataPackages} from "@redstone-finance/sdk";
 import axios from "axios";
 import csvToJSON from "csv-file-to-json";
 import {String} from "aws-sdk/clients/cloudsearch";
-import {validatePareter} from "./common"
+import {validateParameter} from "./common"
 import {createInfluxService, createPointFromPriceObj,} from "../helpers/influx";
 
 export interface PriceWithParams
@@ -447,10 +447,10 @@ export const prices = (router: Router) => {
             from(bucket: "redstone")
             |> range(start: ${start}, stop: ${stop})
             |> filter(fn: (r) => r._measurement == "dataPackages")
-            |> filter(fn: (r) => r.dataFeedId == "${validatePareter(
+            |> filter(fn: (r) => r.dataFeedId == "${validateParameter(
               params.symbol
             )}")
-            |> filter(fn: (r) => r.dataServiceId == "${validatePareter(
+            |> filter(fn: (r) => r.dataServiceId == "${validateParameter(
               dataServiceId
             )}")
             |> keep(columns: ["_time", "_value", "_field", "dataFeedId", "dataServiceId"])
@@ -526,10 +526,10 @@ export const prices = (router: Router) => {
             from(bucket: "redstone")
             |> range(start: ${start}, stop: ${stop})
             |> filter(fn: (r) => r._measurement == "dataPackages")
-            |> filter(fn: (r) => r.dataFeedId == "${validatePareter(
+            |> filter(fn: (r) => r.dataFeedId == "${validateParameter(
               params.symbol
             )}")
-            |> filter(fn: (r) => r.dataServiceId == "${validatePareter(
+            |> filter(fn: (r) => r.dataServiceId == "${validateParameter(
               dataServiceId
             )}")
             |> keep(columns: ["_time", "_value", "_field", "dataFeedId", "dataServiceId"])
@@ -592,7 +592,7 @@ export const prices = (router: Router) => {
         ? Math.floor(params.toTimestamp / 1000)
         : Math.ceil(Date.now() / 1000);
     const start = stop - 2 * 60;
-    tokens.forEach((token) => validatePareter(token));
+    tokens.forEach((token) => validateParameter(token));
     console.log(
       `Start: ${start} stop ${stop}, tokens: ${JSON.stringify(tokens)}`
     );
@@ -600,7 +600,7 @@ export const prices = (router: Router) => {
             from(bucket: "redstone")
             |> range(start: ${start}, stop: ${stop})
             |> filter(fn: (r) => r._measurement == "dataPackages")
-            |> filter(fn: (r) => r.dataServiceId == "${validatePareter(
+            |> filter(fn: (r) => r.dataServiceId == "${validateParameter(
               dataServiceId
             )}")
             |> filter(fn: (r) => contains(value: r.dataFeedId, set: ${JSON.stringify(
@@ -871,7 +871,7 @@ export const prices = (router: Router) => {
         }
       }
 
-      res.json({ msg: `Prices saved. count: ${pricesSavedCount}` });
+      return res.json({ msg: `Prices saved. count: ${pricesSavedCount}` });
     })
   );
 };

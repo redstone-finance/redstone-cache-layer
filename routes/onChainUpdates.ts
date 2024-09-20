@@ -2,7 +2,7 @@ import { Request, Router } from "express";
 import asyncHandler from "express-async-handler";
 import axios from "axios";
 import csvToJSON from "csv-file-to-json";
-import {validatePareter} from "./common"
+import {validateParameter} from "./common"
 
 export async function requestInflux(query: String) {
   const config = {
@@ -30,9 +30,9 @@ export const onChainUpdates = (router: Router) => {
         "/on-chain-updates",
         asyncHandler(async (req, res) => {
 
-            const dataFeedId = validatePareter(req.query.dataFeedId as string);
-            const adapterName = validatePareter(req.query.adapterName as string);
-            const daysRange = validatePareter(req.query.daysRange as string);
+            const dataFeedId = validateParameter(req.query.dataFeedId as string);
+            const adapterName = validateParameter(req.query.adapterName as string);
+            const daysRange = validateParameter(req.query.daysRange as string);
             
             const request = `
                 from(bucket: "redstone-transactions")
@@ -54,7 +54,7 @@ export const onChainUpdates = (router: Router) => {
                 }
             })
 
-          res.json({ onChainUpdates: mappedResponse });
+          return res.json({ onChainUpdates: mappedResponse });
          
         })
     );
