@@ -54,7 +54,7 @@ export const onChainUpdates = (router: Router) => {
                 }
             })
 
-            return res.json({ onChainUpdates: mappedResponse });
+          res.json({ onChainUpdates: mappedResponse });
          
         })
     );
