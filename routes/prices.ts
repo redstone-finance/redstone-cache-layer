@@ -412,6 +412,7 @@ export const prices = (router: Router) => {
         const dataPackageResponse = await requestDataPackages({
           dataServiceId: dataServiceId,
           uniqueSignersCount: 1,
+          dataPackagesIds: [symbol],
         });
         const dataPackage = dataPackageResponse["___ALL_FEEDS___"][0];
         return res.json(toMap(mapFromSdkToResponse(dataPackage, provider)));
