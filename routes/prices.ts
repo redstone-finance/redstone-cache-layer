@@ -78,12 +78,9 @@ const addSeveralPricesInflux = async (params: PriceWithParams[]) => {
     return;
   }
 
-  let price;
-  let point;
-
   for (const param of params) {
-    price = priceParamsToPriceObj(param);
-    point = createPointFromPriceObj(price);
+    const price = priceParamsToPriceObj(param);
+    const point = createPointFromPriceObj(price);
     influx.queueOnePoint(point);
   }
 
@@ -814,18 +811,16 @@ export const prices = (router: Router) => {
         // await assertValidSignature(priceToVerify);
 
         // Adding several prices
-        try {
-          await addSeveralPricesMongo(reqBody);
-        } catch (mongoError) {
-          logger.error("Error saving prices to MongoDB: ", mongoError);
-          throw mongoError;
-        }
-        try {
-          await addSeveralPricesInflux(reqBody);
-        } catch (influxError) {
-          logger.error("Error saving prices to InfluxDB: ", influxError);
-          throw influxError;
-        }
+        await Promise.all([
+          addSeveralPricesMongo(reqBody).catch((mongoError) => {
+            logger.error("Error saving prices to MongoDB: ", mongoError);
+            throw mongoError;
+          }),
+          addSeveralPricesInflux(reqBody).catch((influxError) => {
+            logger.error("Error saving prices to InfluxDB: ", influxError);
+            throw influxError;
+          }),
+        ]);
 
 
         // Cleaning older prices for the same provider after posting
@@ -845,18 +840,17 @@ export const prices = (router: Router) => {
         await assertValidSignature(reqBody);
 
         // Adding a single price
-        try {
-          await addSinglePriceMongo(reqBody);
-        } catch (mongoError) {
-          logger.error("Error saving price to MongoDB: ", mongoError);
-          throw mongoError;
-        }
-        try {
-          await addSinglePriceInflux(reqBody);
-        } catch (influxError) {
-          logger.error("Error saving price to InfluxDB: ", influxError);
-          throw influxError;
-        }
+        await Promise.all([
+          addSinglePriceMongo(reqBody).catch((mongoError) => {
+            logger.error("Error saving prices to MongoDB: ", mongoError);
+            throw mongoError;
+          }),
+          addSinglePriceInflux(reqBody).catch((influxError) => {
+            logger.error("Error saving prices to InfluxDB: ", influxError);
+            throw influxError;
+          }),
+        ]);
+
         pricesSavedCount = 1;
 
         // Cleaning prices for the same provider and symbol before posting

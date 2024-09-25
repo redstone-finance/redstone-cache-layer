@@ -108,13 +108,8 @@ export class InfluxService implements IInfluxService {
 }
 
 class MockInfluxService implements IInfluxService {
-  // eslint-disable-next-line
   queueOnePoint(_point: Point) {}
-
-  // eslint-disable-next-line
   async sendOnePoint(_point: Point) {}
-
-  // eslint-disable-next-line
   async sendQueuedPoints() {}
 }
 
