@@ -35,7 +35,6 @@
     "lodash": "^4.17.21",
     "mongodb-memory-server": "^7.5.1",
     "mongoose": "^6.3.4",
-    "puppeteer": "^23.3.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {
