@@ -1,10 +1,10 @@
-import { Request, Router } from "express";
+import { Router } from "express";
 import asyncHandler from "express-async-handler";
 import axios from "axios";
 import csvToJSON from "csv-file-to-json";
-import {validateParameter} from "./common"
+import { validateParameter } from "./common";
 
-export async function requestInflux(query: String) {
+export async function requestInflux(query: string) {
   const config = {
     headers: {
       Authorization: `Token ${process.env.INFLUXDB_TOKEN}`,
@@ -26,15 +26,14 @@ export async function requestInflux(query: String) {
 }
 
 export const onChainUpdates = (router: Router) => {
-    router.get(
-        "/on-chain-updates",
-        asyncHandler(async (req, res) => {
+  router.get(
+    "/on-chain-updates",
+    asyncHandler(async (req, res) => {
+      const dataFeedId = validateParameter(req.query.dataFeedId as string);
+      const adapterName = validateParameter(req.query.adapterName as string);
+      const daysRange = validateParameter(req.query.daysRange as string);
 
-            const dataFeedId = validateParameter(req.query.dataFeedId as string);
-            const adapterName = validateParameter(req.query.adapterName as string);
-            const daysRange = validateParameter(req.query.daysRange as string);
-            
-            const request = `
+      const request = `
                 from(bucket: "redstone-transactions")
                 |> range(start: -${daysRange}d)
                 |> filter(fn: (r) =>
@@ -45,18 +44,16 @@ export const onChainUpdates = (router: Router) => {
                 |> keep(columns: ["_time", "_value", "sender"])
             `;
 
-            const influxResponse = await requestInflux(request)
-            const mappedResponse = influxResponse.map(dataPoint => {
-                return {
-                    timestamp: new Date(dataPoint._time).getTime(),
-                    value: dataPoint._value,
-                    sender: dataPoint.sender,
-                }
-            })
+      const influxResponse = await requestInflux(request);
+      const mappedResponse = influxResponse.map((dataPoint) => {
+        return {
+          timestamp: new Date(dataPoint._time).getTime(),
+          value: dataPoint._value,
+          sender: dataPoint.sender,
+        };
+      });
 
-          return res.json({ onChainUpdates: mappedResponse });
-         
-        })
-    );
-    
-}
+      res.json({ onChainUpdates: mappedResponse });
+    })
+  );
+};

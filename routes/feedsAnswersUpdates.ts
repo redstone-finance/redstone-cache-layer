@@ -1,15 +1,12 @@
-import { Request, Router } from "express";
+import { Router } from "express";
 import asyncHandler from "express-async-handler";
-import axios from "axios";
-import csvToJSON from "csv-file-to-json";
-import { validateParameter } from "./common"
-import { requestInflux } from "./onChainUpdates"
+import { requestInflux } from "./onChainUpdates";
 
 export const feedsAnswersUpdate = (router: Router) => {
-    router.get(
-        "/feeds-answers-update",
-        asyncHandler(async (req, res) => {
-            const request = `
+  router.get(
+    "/feeds-answers-update",
+    asyncHandler(async (req, res) => {
+      const request = `
             from(bucket: "redstone-transactions")
             |> range(start: -24h)
             |> filter(fn: (r) =>
@@ -21,35 +18,33 @@ export const feedsAnswersUpdate = (router: Router) => {
             |> keep(columns: ["_time", "_value", "adapterName", "_field"])
         `;
 
-            const influxResponse = await requestInflux(request)
-            const mapInfluxResponse = () => {
-                const result = {};
+      const influxResponse = await requestInflux(request);
+      const mapInfluxResponse = () => {
+        const result = {};
 
-                influxResponse.forEach(item => {
-                    const adapterName = item.adapterName;
-                    if (!adapterName || adapterName === 'undefined') {
-                        return;
-                    }
-                    const feedId = item._field.replace('value-', '');
-                    const timestamp = item._time;
-                    const value = item._value;
+        influxResponse.forEach((item) => {
+          const adapterName = item.adapterName;
+          if (!adapterName || adapterName === "undefined") {
+            return;
+          }
+          const feedId = item._field.replace("value-", "");
+          const timestamp = item._time;
+          const value = item._value;
 
-                    if (!result[adapterName]) {
-                        result[adapterName] = {};
-                    }
+          if (!result[adapterName]) {
+            result[adapterName] = {};
+          }
 
-                    result[adapterName][feedId] = {
-                        timestamp,
-                        value
-                    };
-                });
+          result[adapterName][feedId] = {
+            timestamp,
+            value,
+          };
+        });
 
-                return result;
-            };
+        return result;
+      };
 
-            return res.json(mapInfluxResponse());
-
-        })
-    );
-
-}
+      res.json(mapInfluxResponse());
+    })
+  );
+};

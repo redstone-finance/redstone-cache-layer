@@ -13,7 +13,7 @@ export const metrics = (router: Router) => {
     const { label, value } = req.body;
     await saveMetric({ label, value });
 
-    return res.json({
+    res.json({
       msg: "Metric saved",
     });
   }));

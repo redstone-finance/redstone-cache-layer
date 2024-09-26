@@ -868,7 +868,7 @@ export const prices = (router: Router) => {
         }
       }
 
-      return res.json({ msg: `Prices saved. count: ${pricesSavedCount}` });
+      res.json({ msg: `Prices saved. count: ${pricesSavedCount}` });
     })
   );
 };
