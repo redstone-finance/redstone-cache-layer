@@ -28,6 +28,7 @@ export interface PriceWithParams
   signature?: string;
   evmSignature?: string;
   liteEvmSignature?: string;
+  forceInflux?: boolean;
 }
 
 const addSinglePriceMongo = async (params: PriceWithParams) => {
@@ -667,6 +668,7 @@ export const prices = (router: Router) => {
   }
 
   function isOldDataRequest(params) {
+    if(params?.forceInflux) return true
     const now = Date.now();
     const days30Ago = Date.now() - 30 * 24 * 60 * 60 * 1000;
     if (params.fromTimestamp && days30Ago > Number(params.fromTimestamp)) {
