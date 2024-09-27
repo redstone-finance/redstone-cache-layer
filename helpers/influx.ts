@@ -113,12 +113,6 @@ class MockInfluxService implements IInfluxService {
   async sendQueuedPoints() {}
 }
 
-let influxServiceInstance:
-  | InfluxService
-  | MockInfluxService
-  | undefined;
-
-
 export const getDataServiceIdForInflux = (provider: string): string => {
   const dataServiceId = providerDataServiceMap[provider];
   if (!dataServiceId) {
@@ -146,10 +140,10 @@ export const createPointFromPriceObj = (params: PriceWithParams): Point => {
 };
 
 export const createInfluxService = () => {
-  if (config.influxBroadcasterUrl && config.influxBroadcasterAuthToken) {
+  if (config.influxUrl && config.InfluxAuthToken) {
     return new InfluxService({
-      url: config.influxBroadcasterUrl,
-      token: config.influxBroadcasterAuthToken,
+      url: config.influxUrl,
+      token: config.InfluxAuthToken,
     });
   } else {
     logger.info("No influx service set, exiting");
