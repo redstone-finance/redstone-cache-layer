@@ -1,29 +1,20 @@
-import { Request, Router } from "express";
+import {Request, Router} from "express";
 import asyncHandler from "express-async-handler";
-import { FilterQuery, PipelineStage, Document } from "mongoose";
-import _ from "lodash";
-import {
-  bigLimitWithMargin,
-  defaultLimit,
-  cacheTTLMilliseconds,
-  maxLimitForPrices,
-  enableLiteMode,
-} from "../config";
-import { getConfig } from "./configs";
-import { getDataServiceId } from "../providers";
-import { Price, priceToObject } from "../models/price";
-import { logEvent } from "../helpers/amplitude-event-logger";
-import { assertValidSignature } from "../helpers/signature-verifier";
-import { priceParamsToPriceObj, getProviderFromParams } from "../utils";
-import { logger } from "../helpers/logger";
-import { tryCleanCollection } from "../helpers/mongo";
-import { requestDataPackages, fetchDataPackages } from "@redstone-finance/sdk";
-import { providerToDataServiceId } from "../providers";
+import {FilterQuery, PipelineStage} from "mongoose";
+import {bigLimitWithMargin, cacheTTLMilliseconds, defaultLimit, enableLiteMode, maxLimitForPrices,} from "../config";
+import {getDataServiceId} from "../providers";
+import {Price, priceToObject} from "../models/price";
+import {logEvent} from "../helpers/amplitude-event-logger";
+import {assertValidSignature} from "../helpers/signature-verifier";
+import {getProviderFromParams, priceParamsToPriceObj} from "../utils";
+import {logger} from "../helpers/logger";
+import {tryCleanCollection} from "../helpers/mongo";
+import {fetchDataPackages, requestDataPackages} from "@redstone-finance/sdk";
 import axios from "axios";
 import csvToJSON from "csv-file-to-json";
-import { String } from "aws-sdk/clients/cloudsearch";
-import { time } from "console";
-import {validatePareter} from "./common"
+import {String} from "aws-sdk/clients/cloudsearch";
+import {validateParameter} from "./common"
+import {createInfluxService, createPointFromPriceObj,} from "../helpers/influx";
 
 export interface PriceWithParams
   extends Omit<Price, "signature" | "evmSignature" | "liteEvmSignature"> {
@@ -40,9 +31,21 @@ export interface PriceWithParams
   forceInflux?: boolean;
 }
 
-const addSinglePrice = async (params: PriceWithParams) => {
+const addSinglePriceMongo = async (params: PriceWithParams) => {
   const price = new Price(priceParamsToPriceObj(params));
   await price.save();
+};
+
+const addSinglePriceInflux = async (params: PriceWithParams) => {
+  const price = priceParamsToPriceObj(params);
+  const point = createPointFromPriceObj(price);
+
+  const influx = createInfluxService();
+  if (!influx) {
+    return;
+  }
+
+  await influx.sendOnePoint(point);
 };
 
 const getLatestPricesForSingleToken = async (params: PriceWithParams) => {
@@ -58,7 +61,7 @@ const getLatestPricesForSingleToken = async (params: PriceWithParams) => {
   return prices.map(priceToObject);
 };
 
-const addSeveralPrices = async (params: PriceWithParams[]) => {
+const addSeveralPricesMongo = async (params: PriceWithParams[]) => {
   const ops = [];
   for (const price of params) {
     ops.push({
@@ -68,6 +71,21 @@ const addSeveralPrices = async (params: PriceWithParams[]) => {
     });
   }
   await Price.bulkWrite(ops);
+};
+
+const addSeveralPricesInflux = async (params: PriceWithParams[]) => {
+  const influx = createInfluxService();
+  if (!influx) {
+    return;
+  }
+
+  for (const param of params) {
+    const price = priceParamsToPriceObj(param);
+    const point = createPointFromPriceObj(price);
+    influx.queueOnePoint(point);
+  }
+
+  await influx.sendQueuedPoints();
 };
 
 const getPriceForManyTokens = async (params: PriceWithParams) => {
@@ -367,7 +385,7 @@ export const prices = (router: Router) => {
         const dataPackageResponse = await requestDataPackages({
           dataServiceId: dataServiceId,
           uniqueSignersCount: 1,
-          dataFeeds: [symbol],
+          dataPackagesIds: [symbol],
         });
         const dataPackage = dataPackageResponse[symbol][0];
         return res.json(mapFromSdkToResponse(dataPackage, provider));
@@ -392,6 +410,7 @@ export const prices = (router: Router) => {
         const dataPackageResponse = await requestDataPackages({
           dataServiceId: dataServiceId,
           uniqueSignersCount: 1,
+          dataPackagesIds: [symbol],
         });
         const dataPackage = dataPackageResponse["___ALL_FEEDS___"][0];
         return res.json(toMap(mapFromSdkToResponse(dataPackage, provider)));
@@ -427,10 +446,10 @@ export const prices = (router: Router) => {
             from(bucket: "redstone")
             |> range(start: ${start}, stop: ${stop})
             |> filter(fn: (r) => r._measurement == "dataPackages")
-            |> filter(fn: (r) => r.dataFeedId == "${validatePareter(
+            |> filter(fn: (r) => r.dataFeedId == "${validateParameter(
               params.symbol
             )}")
-            |> filter(fn: (r) => r.dataServiceId == "${validatePareter(
+            |> filter(fn: (r) => r.dataServiceId == "${validateParameter(
               dataServiceId
             )}")
             |> keep(columns: ["_time", "_value", "_field", "dataFeedId", "dataServiceId"])
@@ -506,10 +525,10 @@ export const prices = (router: Router) => {
             from(bucket: "redstone")
             |> range(start: ${start}, stop: ${stop})
             |> filter(fn: (r) => r._measurement == "dataPackages")
-            |> filter(fn: (r) => r.dataFeedId == "${validatePareter(
+            |> filter(fn: (r) => r.dataFeedId == "${validateParameter(
               params.symbol
             )}")
-            |> filter(fn: (r) => r.dataServiceId == "${validatePareter(
+            |> filter(fn: (r) => r.dataServiceId == "${validateParameter(
               dataServiceId
             )}")
             |> keep(columns: ["_time", "_value", "_field", "dataFeedId", "dataServiceId"])
@@ -572,7 +591,7 @@ export const prices = (router: Router) => {
         ? Math.floor(params.toTimestamp / 1000)
         : Math.ceil(Date.now() / 1000);
     const start = stop - 2 * 60;
-    tokens.forEach((token) => validatePareter(token));
+    tokens.forEach((token) => validateParameter(token));
     console.log(
       `Start: ${start} stop ${stop}, tokens: ${JSON.stringify(tokens)}`
     );
@@ -580,7 +599,7 @@ export const prices = (router: Router) => {
             from(bucket: "redstone")
             |> range(start: ${start}, stop: ${stop})
             |> filter(fn: (r) => r._measurement == "dataPackages")
-            |> filter(fn: (r) => r.dataServiceId == "${validatePareter(
+            |> filter(fn: (r) => r.dataServiceId == "${validateParameter(
               dataServiceId
             )}")
             |> filter(fn: (r) => contains(value: r.dataFeedId, set: ${JSON.stringify(
@@ -794,7 +813,17 @@ export const prices = (router: Router) => {
         // await assertValidSignature(priceToVerify);
 
         // Adding several prices
-        await addSeveralPrices(reqBody);
+        await Promise.all([
+          addSeveralPricesMongo(reqBody).catch((mongoError) => {
+            logger.error("Error saving prices to MongoDB: ", mongoError);
+            throw mongoError;
+          }),
+          addSeveralPricesInflux(reqBody).catch((influxError) => {
+            logger.error("Error saving prices to InfluxDB: ", influxError);
+            throw influxError;
+          }),
+        ]);
+
 
         // Cleaning older prices for the same provider after posting
         // new ones in the lite mode
@@ -813,7 +842,17 @@ export const prices = (router: Router) => {
         await assertValidSignature(reqBody);
 
         // Adding a single price
-        await addSinglePrice(reqBody);
+        await Promise.all([
+          addSinglePriceMongo(reqBody).catch((mongoError) => {
+            logger.error("Error saving prices to MongoDB: ", mongoError);
+            throw mongoError;
+          }),
+          addSinglePriceInflux(reqBody).catch((influxError) => {
+            logger.error("Error saving prices to InfluxDB: ", influxError);
+            throw influxError;
+          }),
+        ]);
+
         pricesSavedCount = 1;
 
         // Cleaning prices for the same provider and symbol before posting
@@ -829,7 +868,7 @@ export const prices = (router: Router) => {
         }
       }
 
-      return res.json({ msg: `Prices saved. count: ${pricesSavedCount}` });
+      res.json({ msg: `Prices saved. count: ${pricesSavedCount}` });
     })
   );
 };

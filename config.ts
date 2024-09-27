@@ -1,5 +1,12 @@
+import { RedstoneCommon } from "@redstone-finance/utils";
+import { z } from "zod";
 import dotenv from "dotenv";
 dotenv.config();
+
+export interface InfluxConfig {
+  influxUrl?: string;
+  InfluxAuthToken?: string;
+}
 
 const getEnv = (name: string, defaultValue: any) => {
   return process.env[name] || defaultValue;
@@ -21,6 +28,17 @@ const dbUrls = {
   prod: "",
 };
 
+export const config: InfluxConfig = Object.freeze({
+  influxUrl: RedstoneCommon.getFromEnv(
+    "INFLUXDB_URL",
+    z.string().optional()
+  ),
+  InfluxAuthToken: RedstoneCommon.getFromEnv(
+    "INFLUXDB_TOKEN",
+    z.string().optional()
+  ),
+} as InfluxConfig);
+
 if (!enableLiteMode && !isTest) {
   dbUrls["prod"] = process.env.MONGO_DB_URL;
 }
@@ -38,7 +56,6 @@ const dbUrl = getDbUrl();
 const bigLimitWithMargin = 1200;
 const defaultLimit = 1;
 const defaultLocalPort = 9000;
-const awsSesRegion = "eu-north-1";
 const isProduction = isProd();
 const maxLimitForPrices = 3000;
 const enableAmplitudeLogging = getEnv("ENABLE_AMPLITUDE_LOGGING", false);
@@ -49,7 +66,6 @@ export {
   bigLimitWithMargin,
   defaultLimit,
   defaultLocalPort,
-  awsSesRegion,
   isProduction,
   maxLimitForPrices,
   enableAmplitudeLogging,

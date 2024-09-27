@@ -6,14 +6,14 @@ export const metrics = (router: Router) => {
 
   /**
    * This endpoint is used for saving metric values in AWS Cloudwatch.
-   * Thanks to them we can analyse redstone-node performance and build
+   * Thanks to the metrics we can analyse redstone-node performance and build
    * nice charts
   */
   router.post("/metrics", asyncHandler(async (req, res) => {
     const { label, value } = req.body;
     await saveMetric({ label, value });
 
-    return res.json({
+    res.json({
       msg: "Metric saved",
     });
   }));

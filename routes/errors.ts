@@ -21,7 +21,7 @@ export const errors = (router: Router) => {
     //   text: error,
     // });
 
-    return res.json({
+    res.json({
       msg: "Error reported",
     });
   }));
