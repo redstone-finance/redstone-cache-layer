@@ -30,32 +30,31 @@ export const onChainUpdates = (router: Router) => {
         "/on-chain-updates",
         asyncHandler(async (req, res) => {
 
-            const dataFeedId = validatePareter(req.query.dataFeedId as string);
-            const adapterName = validatePareter(req.query.adapterName as string);
-            const daysRange = validatePareter(req.query.daysRange as string);
-            
-            const request = `
-                from(bucket: "redstone-transactions")
-                |> range(start: -${daysRange}d)
-                |> filter(fn: (r) =>
-                    r._measurement == "redstoneTransactions" and
-                    r._field == "value-${dataFeedId}" and
-                    r.adapterName == "${adapterName}"
-                )
-                |> keep(columns: ["_time", "_value", "sender"])
-            `;
-
-            const influxResponse = await requestInflux(request)
-            const mappedResponse = influxResponse.map(dataPoint => {
-                return {
-                    timestamp: new Date(dataPoint._time).getTime(),
-                    value: dataPoint._value,
-                    sender: dataPoint.sender,
-                }
-            })
-
+          const dataFeedId = validatePareter(req.query.dataFeedId as string);
+          const adapterName = validatePareter(req.query.adapterName as string);
+          const daysRange = validatePareter(req.query.daysRange as string);
+          
+          const request = `
+              from(bucket: "redstone-transactions")
+              |> range(start: -${daysRange}d)
+              |> filter(fn: (r) =>
+                  r._measurement == "redstoneTransactions" and
+                  (r._field == "value-${dataFeedId}" or r._field == "txHash") and
+                  r.adapterName == "${adapterName}"
+              )
+              |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+              |> keep(columns: ["_time", "value-${dataFeedId}", "txHash"])
+          `;
+          
+          const influxResponse = await requestInflux(request);
+          const mappedResponse = influxResponse.map(dataPoint => {
+              return {
+                  timestamp: new Date(dataPoint._time).getTime(),
+                  value: dataPoint[`value-${dataFeedId}`],
+                  txHash: dataPoint.txHash,
+              }
+          });
             return res.json({ onChainUpdates: mappedResponse });
-         
         })
     );
     
